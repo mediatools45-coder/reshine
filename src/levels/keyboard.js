@@ -106,7 +106,7 @@ export default {
       paint({ id: 'retro', name: 'Restore the Plastic Color', tool: 'pad', input: 'Wipe', hint: 'Wipe the treatment over the yellowed plastic.', done: 'Even beige again', cam: { preset: 'full' }, canTurn: false,
         parts: ['shell'], layer: 'rust', amt: .5, rad: .65, fx: 'plastic', snd: 'wipe', req: .82, complete() { P().base.surf.setLayer('rust', 0); },
         tut: { title: 'Reverse the yellowing', body: 'Old ABS plastic turns yellow with age. Wipe the treatment pad over the shell and watch the original beige come back.' } }),
-      paint({ id: 'cable', name: 'Clean the Cable', tool: 'cloth', input: 'Long drag', hint: 'Drag the cloth along the cable.', done: 'Cable clean', cam: { preset: 'work', focus: [-1.2, 3.3, -.6], r: 2.6 }, canTurn: false,
+      paint({ id: 'cable', name: 'Clean the Cable', tool: 'cloth', input: 'Long drag', hint: 'Drag the cloth along the cable.', done: 'Cable clean', cam: { preset: 'full' }, canTurn: false,
         parts: ['cable'], layer: 'dirt', amt: .6, rad: .4, fx: 'wipe', snd: 'wipe', req: .8, faces: null }),
       snap({ id: 'assemble', name: 'Reassemble the Shell', hint: 'Drop the plate and the shell back on, then the screws.', done: 'Keyboard closed', keys: ['plate', 'shell', 'screw0', 'screw1', 'screw2', 'screw3'], ordered: true, cam: { preset: 'full' },
         stage: () => stage({ home: ['base', 'cable'], tray: ['plate', 'shell', 'screw0', 'screw1', 'screw2', 'screw3'] }) }),

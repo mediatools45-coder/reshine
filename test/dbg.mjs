@@ -6,7 +6,7 @@ page.on('console', m => { if (!/fonts\.g|ERR_TUNNEL|net::/.test(m.text())) conso
 await page.goto('file://' + process.cwd() + '/dist/index.html?lowq=1');
 await page.waitForFunction(() => window.__g && !document.getElementById('load').classList.contains('on'), null, { timeout: 180000 });
 const W = (f, a) => page.evaluate(f, a), M = page.mouse, sleep = ms => page.waitForTimeout(ms);
-await W(() => { window.__g.G.dtCap = .12; localStorage.setItem('rw_tips', '0'); });
+await W(() => { window.__g.G.dtCap = .5; localStorage.setItem('rw_tips', '0'); });
 await W(([l, n]) => { const g = window.__g; g.openLevel(l); g.startLevel(g.G.level, 0); if (+n) g.ff(+n); }, [lvl, stepN]);
 await sleep(1500);
 const a = await W(() => window.__g.auto()); console.log(JSON.stringify(a));

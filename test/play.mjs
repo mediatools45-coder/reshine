@@ -9,7 +9,7 @@ const errs = []; page.on('console', m => { if (m.type() === 'error' && !/fonts\.
 await page.goto('file://' + process.cwd() + '/dist/index.html?lowq=1');
 await page.waitForFunction(() => window.__g && !document.getElementById('load').classList.contains('on'), null, { timeout: 180000 });
 const W = (f, a) => page.evaluate(f, a), M = page.mouse, sleep = ms => page.waitForTimeout(ms);
-await W(() => { window.__g.G.dtCap = .12; localStorage.setItem('rw_tips', '0'); });
+await W(() => { window.__g.G.dtCap = .5; localStorage.setItem('rw_tips', '0'); });
 const ids = await W(() => window.__g.LEVELS.map(l => l.id));
 async function drag(pts, stepMs = 12, sub = 4) { if (!pts.length) return; await M.move(pts[0].x, pts[0].y); await M.down(); for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i]; for (let k = 1; k <= sub; k++) { await M.move(a.x + (b.x - a.x) * k / sub, a.y + (b.y - a.y) * k / sub); } await sleep(stepMs); } await M.up(); }
 const line = (a, b, n = 8) => Array.from({ length: n + 1 }, (_, i) => ({ x: a.x + (b.x - a.x) * i / n, y: a.y + (b.y - a.y) * i / n }));

@@ -103,11 +103,11 @@ export function camImpulse(k = .8) { G.shake = Math.max(G.shake, k); }
 
 /* ---------------- steps ---------------- */
 export const st = () => G.steps[G.step];
-export function loadLevel(def) {
+export function loadLevel(def, opt = {}) {
   if (G.item) { G.item.dispose(); G.item = null; } if (G.before) { G.before.dispose(); G.before = null; }
   cancelAll(); clearParticles(); setTool(null); setLoop(null);
   const it = new Item(def), bf = new Item(def, true);
-  try { def.build(it, it.r); it.finalize(); def.build(bf, bf.r); bf.finalize(); if (def.after) { def.after(it); def.after(bf); } }
+  try { def.build(it, it.r); it.finalize(); if (def.after) def.after(it); if (!opt.noBefore) { def.build(bf, bf.r); bf.finalize(); if (def.after) def.after(bf); } }
   catch (e) { try { it.dispose(); bf.dispose(); } catch (_) { } G.level = null; throw e; }
   R.scene.add(it.root); bf.root.visible = false; R.scene.add(bf.root);
   for (const s of it.surfs.concat(bf.surfs)) { s.finishFades(); s.update(0); }

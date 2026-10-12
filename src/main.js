@@ -58,7 +58,7 @@ async function makeThumbs() {
   if (G.item) { G.item.dispose(); G.item = null; } if (G.before) { G.before.dispose(); G.before = null; }
 }
 function snapshot(def, keep) {
-  if (!keep) loadLevel(def);
+  if (!keep) loadLevel(def, { noBefore: true });
   const S = 360, old = CAM.off; CAM.off = 0; const q = R.q; R.q = Math.min(1, R.q);
   R.renderer.setPixelRatio(1); R.renderer.setSize(S, S, false); R.composer.setPixelRatio(1); R.composer.setSize(S, S); R.W = R.H = S;
   R.camera.aspect = 1; R.camera.updateProjectionMatrix(); RIG.spin = 0; RIG.home = false;

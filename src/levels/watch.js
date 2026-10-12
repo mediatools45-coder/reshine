@@ -62,7 +62,7 @@ export default {
   after(it) {
     const P = it.parts;
     P.case.surf.author('dirt', (p, n, N) => .5 + .45 * smooth(.3, .7, N(4))); P.case.surf.author('rust', (p, n, N) => .5 * smooth(.55, .8, N(3)));
-    P.movement.surf.author('dirt', (p, n, N) => .25 + .7 * smooth(.45, .75, N(5) + N(13) * .25));
+    P.movement.surf.author('dirt', (p, n, N) => .15 + .55 * smooth(.5, .8, N(5) + N(13) * .25)); P.movement.surf.u.uDirtRO.value.y = .7;
     for (const k of ['strapT', 'strapB']) { P[k].surf.author('dirt', (p, n, N) => .55 + .4 * smooth(.3, .7, N(5))); P[k].surf.author('rust', (p, n, N) => .6 * smooth(.5, .8, N(4))); }
   },
   layouts: {

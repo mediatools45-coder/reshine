@@ -65,11 +65,11 @@ if(uKind<.5){
   float al=dot(vMP,uGrainAx); vec3 pp=vMP-uGrainAx*al;
   float g1=sFbm(pp*uGrainS*3.+uGrainAx*al*.35+uSeed), g2=sNoise(pp*uGrainS*7.+uGrainAx*al*.45+uSeed*2.);
   float ring=.5+.5*sin((length(pp)*uGrainS*4.+g1*4.)*2.);
-  float gr=clamp(g1*.6+g2*.25+ring*.22,0.,1.);
+  float gr=clamp(g1*.62+g2*.3+ring*.07,0.,1.);
   vec3 dry=mix(uBase*.7,uBase*1.15,gr); dry=mix(dry,vec3(dot(dry,vec3(.33))),.35);
   sCol=dry; sR=uBaseRM.x; sM=0.; sGr=vec2(dFdx(g2),dFdy(g2))*.6+vec2(dFdx(g1),dFdy(g1))*(1.-sB.g)*.4*uScratch;
   float sd=smoothstep(.02,.8,sB.g); vec3 fresh=mix(uSandC*.78,uSandC*1.1,gr); sCol=mix(sCol,fresh,sd); sR=mix(sR,uSandR,sd);
-  float fin=smoothstep(.1,.75,sB.a*(1.+(nL-.5)*.5)); vec3 stain=mix(uFinC*.55,uFinC*1.2,gr)*mix(vec3(1.),uWood2,ring*.4); sCol=mix(sCol,stain,fin); sR=mix(sR,uFinP.x,fin); sCC=fin*uFinP.z;
+  float fin=smoothstep(.1,.75,sB.a*(1.+(nL-.5)*.5)); vec3 stain=mix(uFinC*.55,uFinC*1.2,gr)*mix(vec3(1.),uWood2,ring*.12); sCol=mix(sCol,stain,fin); sR=mix(sR,uFinP.x,fin); sCC=fin*uFinP.z;
   float pol=smoothstep(.0,.85,sB.b); sR=mix(sR,uPolR,pol); sCC=max(sCC,pol*uFinP.z);
 } else {
   sCol*=.95+.1*nL; float sd=smoothstep(.02,.8,sB.g); sCol=mix(sCol,uSandC,sd); sR=mix(sR,uSandR,sd);
@@ -80,7 +80,7 @@ if(uKind<.5||uKind>1.5){
 }
 float sRes=max(sMk(sB.r,nM),uResG*smoothstep(.1,.9,max(sA.r,sA.g)+.35)*(.75+.25*nM)); sCol=mix(sCol,vec3(.018,.017,.016)*(.7+.6*nH),sRes); sR=mix(sR,.88,sRes); sM=mix(sM,.15,sRes);
 float sDt=sMk(sB.r*0.+sA.b,nL)*uDirtRO.y; vec3 dC=uDirtC*(.8+.35*nM); sCol=mix(sCol,dC,sDt); sR=mix(sR,uDirtRO.x,sDt); sM=mix(sM,sM*.25,sDt); 
-float sCr=sMk(sA.g,nM); vec3 crC=uCrustC*(.55+.9*nH)*(.8+.3*nL); sCol=mix(sCol,crC,sCr); sR=mix(sR,1.,sCr); sM=mix(sM,0.,sCr); sGr+=sCr*(dM*2.+dHh*.4);
+float sCr=sMk(sA.g,nM); vec3 crC=uCrustC*(.55+.9*nH)*(.8+.3*nL); sCol=mix(sCol,crC,sCr); sR=mix(sR,1.,sCr); sM=mix(sM,0.,sCr); sGr+=sCr*(dM*1.1+dHh*.25);
 float sRu=sMk(sA.r,nM); float rv=smoothstep(.25,.75,nM*.7+nH*.5), och=smoothstep(.55,.8,sFbm(sP*.9+20.));
 vec3 ruC=mix(mix(uRust1,uRust2,rv),uRust2*vec3(1.1,1.25,1.1),och*.5)*(.55+.7*nL)*(1.-.25*smoothstep(.62,.82,sFbm(sP*6.3+11.)));
 sCol=mix(sCol,ruC,sRu); sR=mix(sR,1.,sRu); sM=mix(sM,0.,sRu); sGr+=sRu*(dM*1.3+dL*.7+dHh*.25);
@@ -211,10 +211,10 @@ export class Surface {
   author(layer, fn, seed = 1) {
     const [ti, ch] = LAYERS[layer], D = ti ? this.B : this.A;
     const pnt = new THREE.Vector3(), nn = new THREE.Vector3();
-    for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) {
-      const i = y * this.W + x;
+    for (let y = 0; y < this.H; y += 2) for (let x = 0; x < this.W; x += 2) {
       this.texelPos(x, y, pnt, nn);
-      D[i * 4 + ch] = Math.round(clamp(fn(pnt, nn, (q) => fbm(pnt.x * q + seed * 1.3, pnt.y * q - seed, pnt.z * q + seed * .7)), 0, 1) * 255);
+      const v = Math.round(clamp(fn(pnt, nn, (q) => fbm(pnt.x * q + seed * 1.3, pnt.y * q - seed, pnt.z * q + seed * .7)), 0, 1) * 255);
+      for (let dy = 0; dy < 2 && y + dy < this.H; dy++) for (let dx = 0; dx < 2 && x + dx < this.W; dx++) D[((y + dy) * this.W + x + dx) * 4 + ch] = v;
     }
     this.dirty = true;
   }
