@@ -106,9 +106,10 @@ export const st = () => G.steps[G.step];
 export function loadLevel(def) {
   if (G.item) { G.item.dispose(); G.item = null; } if (G.before) { G.before.dispose(); G.before = null; }
   cancelAll(); clearParticles(); setTool(null); setLoop(null);
-  const it = new Item(def); def.build(it, it.r); it.finalize(); R.scene.add(it.root);
-  const bf = new Item(def, true); def.build(bf, bf.r); bf.finalize(); bf.root.visible = false; R.scene.add(bf.root);
-  if (def.after) { def.after(it); def.after(bf); }
+  const it = new Item(def), bf = new Item(def, true);
+  try { def.build(it, it.r); it.finalize(); def.build(bf, bf.r); bf.finalize(); if (def.after) { def.after(it); def.after(bf); } }
+  catch (e) { try { it.dispose(); bf.dispose(); } catch (_) { } G.level = null; throw e; }
+  R.scene.add(it.root); bf.root.visible = false; R.scene.add(bf.root);
   for (const s of it.surfs.concat(bf.surfs)) { s.finishFades(); s.update(0); }
   G.item = it; G.before = bf; G.level = def; G.step = -1; G.finishing = false; G.busy = false; G.flags = {};
   RIG.flip = 0; RIG.off.set(0, 0, 0); RIG.lift = 0; RIG.pose = def.pose || [-.35, .25]; RIG.q.copy(homeQuat()); RIG.extraQ.identity(); RIG.home = true;
@@ -187,7 +188,7 @@ export function bindInput(cv) {
     const p = ptrs.get(e.pointerId), s = st();
     if (!p) { if (e.pointerType === 'mouse' && s && canAct() && T.node) { const r = pickAt(e.clientX, e.clientY); toolAim(r.hit, r.ray, false, freePoint(r.ray)); } return; }
     HOOK.ui && HOOK.ui('nudge'); const dx = e.clientX - p.x, dy = e.clientY - p.y, dt = (e.timeStamp - p.t) / 1000; p.x = e.clientX; p.y = e.clientY; p.t = e.timeStamp;
-    if (mode === 'pinch' && ptrs.size >= 2 && pinch) { const [a, b] = [...ptrs.values()]; CAM.uzoom = clamp(pinch.z * pinch.d / Math.max(20, Math.hypot(a.x - b.x, a.y - b.y)), .45, 1.8); }
+    if (mode === 'pinch' && ptrs.size >= 2 && pinch) { const [a, b] = [...ptrs.values()]; CAM.uzoom = clamp(pinch.z * pinch.d / Math.max(20, Math.hypot(a.x - b.x, a.y - b.y)), .45, 1.8); const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2; if (pinch.mx != null && st() && !st().lockRig) rigDrag(mx - pinch.mx, my - pinch.my, dt); pinch.mx = mx; pinch.my = my; }
     else if (mode === 'orbit') { if (RIG.drag) rigDrag(dx, dy, dt); }
     else if (mode === 'tool' && s) { const r = pickAt(e.clientX, e.clientY); toolAim(r.hit, r.ray, true, freePoint(r.ray)); try { s.onMove && s.onMove(r.hit, r.ray, r); } catch (er) { console.error(er); } }
   });

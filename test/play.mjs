@@ -38,6 +38,7 @@ async function act(a) {
       return;
     }
     case 'cycle': { await drag(line(a.a, a.b, 10), 30, 2); await sleep(300); return; }
+    case 'strum': { const d = a.demo; if (d && d.pts.length > 1) await drag(line(d.pts[0], d.pts[1], 16), 20, 2); return; }
     case 'compare': { const y = 400; await drag([{ x: 200, y }, { x: 30, y }, { x: 380, y }, { x: 200, y }], 40, 8); await sleep(300); if (a.canFinish || true) { const f = await page.$('#btnFinish'); if (f && await f.isVisible()) await f.click(); } return; }
   }
 }

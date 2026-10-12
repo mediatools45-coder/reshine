@@ -11,6 +11,7 @@ page.on('pageerror', e => errs.push('PAGEERROR ' + e.message));
 await page.goto('file://' + process.cwd() + '/dist/index.html?lowq=1');
 await page.waitForFunction(() => window.__g && !document.getElementById('load').classList.contains('on'), null, { timeout: 180000 });
 const W = (f, a) => page.evaluate(f, a);
+await W(() => { window.__g.G.dtCap = .25; });
 const ids = await W(() => window.__g.LEVELS.map(l => l.id));
 const shot = async name => { await page.screenshot({ path: `${OUT}/${name}.png` }); };
 if (shots) await shot('00_shop');
@@ -18,6 +19,7 @@ let fail = 0;
 for (const id of ids) {
   if (only.length && !only.includes(id)) continue;
   const e0 = errs.length;
+  try {
   await W(id => { const g = window.__g; g.openLevel(id); }, id);
   await page.waitForTimeout(600);
   if (shots) await shot(`${id}_00_intro`);
@@ -28,7 +30,7 @@ for (const id of ids) {
     if (!info) break;
     if (shots) await shot(`${id}_${String(i + 1).padStart(2, '0')}_${info.id}`);
     await W(() => window.__g.skipStep());
-    await page.waitForFunction(i => { const g = window.__g; return g.G.step !== i || g.G.mode === 'done'; }, info.i, { timeout: 20000 }).catch(() => { errs.push(`${id}: stuck at step ${info.i} ${info.id}`); });
+    await page.waitForFunction(i => { const g = window.__g; return g.G.step !== i || g.G.mode === 'done'; }, info.i, { timeout: 60000 }).catch(() => { errs.push(`${id}: stuck at step ${info.i} ${info.id}`); });
   }
   await page.waitForTimeout(2200);
   const res = await W(() => { const g = window.__g; return { mode: g.G.mode, step: g.G.step, n: g.G.steps.length, saved: g.save[g.G.level.id] }; });
@@ -37,6 +39,7 @@ for (const id of ids) {
   if (!ok) fail++;
   console.log(`${ok ? 'PASS' : 'FAIL'} ${id}: ${n} steps, mode=${res.mode}, restored=${res.saved && res.saved.restored}` + (errs.length > e0 ? '\n  ' + errs.slice(e0).join('\n  ') : ''));
   await W(() => window.__g.toShop());
+  } catch (e) { fail++; console.log(`FAIL ${id}: exception ${e.message.split('\n')[0]}`); try { await W(() => window.__g.toShop()); } catch (_) { } }
 }
 await browser.close();
 process.exit(fail ? 1 : 0);

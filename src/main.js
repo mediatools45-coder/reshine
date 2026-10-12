@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { R, initEngine, resize, render, setQuality, project } from './core/engine.js';
 import { buildWorld } from './core/world.js';
 import { initParticles, updateParticles, confetti, glints, clearParticles } from './core/particles.js';
-import { initTools, setTool, T } from './core/tools.js';
+import { initTools, setTool, T, makeTool } from './core/tools.js';
 import { G, RIG, CAM, HOOK, loadLevel, enterStep, ff, skipStep, finishStep, updateGame, bindInput, setView, resetView, st, resetPointers } from './core/game.js';
 import { UI, bindUI, updateUI, refreshUI, toast, endGuide, hideCoach } from './core/ui.js';
 import { sfx, setLoop, ac, AU } from './core/audio.js';
@@ -34,7 +34,7 @@ function boot() {
   $('btnShop').onclick = () => { sfx('click'); toShop(); };
   $('btnLook').onclick = () => { $('done').classList.remove('on'); toast('Drag to rotate · pinch to zoom', 2400); };
   document.addEventListener('visibilitychange', () => { if (document.hidden && G.mode === 'play') openMenu(); });
-  window.__g = { auto, G, RIG, CAM, T, R, LEVELS, openLevel, startLevel, ff, skipStep, finishStep, enterStep, st, save, setQuality: applyQuality, toShop, clock, setView };
+  window.__g = { gallery, auto, G, RIG, CAM, T, R, LEVELS, openLevel, startLevel, ff, skipStep, finishStep, enterStep, st, save, setQuality: applyQuality, toShop, clock, setView };
   resize(dprCap);
   requestAnimationFrame(frame);
   makeThumbs().then(() => { $('load').classList.remove('on'); buildShop(); G.mode = 'shop'; if (qs.get('level')) openLevel(qs.get('level')); });
@@ -49,8 +49,9 @@ async function makeThumbs() {
   const all = LEVELS; let i = 0;
   for (const def of all) {
     $('loadTxt').textContent = 'Laying out ' + def.name + '…'; $('loadBar').style.width = (i / all.length * 100) + '%';
-    await new Promise(r => setTimeout(r, 16));
-    try { if (!store.get('rw_thumb_' + def.id)) def.thumb = snapshot(def); } catch (e) { console.error('thumb ' + def.id, e); }
+    if (!store.get('rw_td3_' + def.id)) await new Promise(r => setTimeout(r, 16));
+    const tk = 'rw_td3_' + def.id; def.thumb = store.get(tk);
+    try { if (!def.thumb) { def.thumb = snapshot(def); store.set(tk, def.thumb); } } catch (e) { console.error('thumb ' + def.id, e); }
     i++;
   }
   $('loadBar').style.width = '100%';
@@ -113,6 +114,11 @@ function complete() {
 function openMenu() { if (G.mode !== 'play') return; G.paused = true; $('menuSub').textContent = G.level.name + ' · Step ' + (G.step + 1) + ' of ' + G.steps.length; $('menu').classList.add('on'); }
 function closeMenu() { G.paused = false; $('menu').classList.remove('on'); }
 
+function gallery(kinds) {
+  const g = new THREE.Group(); g.name = 'gallery'; R.scene.add(g); if (G.item) G.item.root.visible = false;
+  kinds.forEach((k, i) => { const t = makeTool(k); t.userData.body.rotation.set(.35, .6, -.25); t.position.set((i % 4 - 1.5) * 2.4, 2.6 - Math.floor(i / 4) * 2.6, 0); g.add(t); });
+  CAM.gt.set(0, 0, 0); CAM.t.copy(CAM.gt); CAM.gdist = CAM.dist = 23; CAM.el = CAM.gel = .15; CAM.az = CAM.gaz = 0; G.mode = 'gallery'; $('shop').classList.remove('on'); document.body.className = 'intro';
+}
 /* ---------- test helper: what to do on screen for the current step ---------- */
 function auto() {
   const s = st(); if (!s || G.mode !== 'play') return null;

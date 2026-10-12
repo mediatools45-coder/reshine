@@ -94,7 +94,7 @@ export function initEngine(canvas) {
   const rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: 4 }); rt.depthTexture = new THREE.DepthTexture(4, 4); rt.depthTexture.type = THREE.UnsignedIntType;
   const composer = new EffectComposer(renderer, rt); R.composer = composer;
   composer.addPass(new ScenePass());
-  R.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), .32, .45, .92); composer.addPass(R.bloom);
+  R.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), .28, .4, 1.25); composer.addPass(R.bloom);
   R.dof = new DofPass(); composer.addPass(R.dof);
   composer.addPass(new OutputPass());
   return true;

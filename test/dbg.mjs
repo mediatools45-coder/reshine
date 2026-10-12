@@ -1,0 +1,15 @@
+import { chromium } from 'playwright-core';
+const [lvl, stepN, ...rest] = process.argv.slice(2);
+const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const page = await browser.newPage({ viewport: { width: 400, height: 780 } });
+page.on('console', m => { if (!/fonts\.g|ERR_TUNNEL|net::/.test(m.text())) console.log('[c]', m.text().slice(0, 300)); }); page.on('pageerror', e => console.log('[E]', e.message));
+await page.goto('file://' + process.cwd() + '/dist/index.html?lowq=1');
+await page.waitForFunction(() => window.__g && !document.getElementById('load').classList.contains('on'), null, { timeout: 180000 });
+const W = (f, a) => page.evaluate(f, a), M = page.mouse, sleep = ms => page.waitForTimeout(ms);
+await W(() => { window.__g.G.dtCap = .12; localStorage.setItem('rw_tips', '0'); });
+await W(([l, n]) => { const g = window.__g; g.openLevel(l); g.startLevel(g.G.level, 0); if (+n) g.ff(+n); }, [lvl, stepN]);
+await sleep(1500);
+const a = await W(() => window.__g.auto()); console.log(JSON.stringify(a));
+globalThis.page = page; globalThis.W = W; globalThis.M = M; globalThis.sleep = sleep;
+if (rest[0]) await import('./dbg_' + rest[0] + '.mjs');
+await browser.close();

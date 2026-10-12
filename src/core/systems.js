@@ -22,7 +22,7 @@ export function stage(spec = {}) {
   for (const k of spec.hide || []) it.hide(k);
   for (const k of spec.home || []) { const p = it.parts[k]; if (p.state !== 'home' || p.g.parent !== p.home.parent || ff) it.home(k, (p.state === 'hidden' || ff) ? 0 : d, .3); else it.home(k, d); }
   for (const k of spec.tray || []) { const p = it.parts[k]; if (p.state !== 'tray') it.toTray(k, ff || p.state === 'hidden'); }
-  const L = typeof spec.layout === 'string' ? G.level.layouts[spec.layout] : spec.layout;
+  let L = typeof spec.layout === 'string' ? G.level.layouts[spec.layout] : spec.layout; if (typeof L === 'function') L = L(it);
   if (L) for (const k in L) { const p = it.parts[k]; it.layout(k, L[k], (p.state === 'hidden' || ff) ? 0 : .6); }
   if (spec.wet != null) for (const s of it.surfs) s.u.uWetG.value = spec.wet;
   if (spec.fn) spec.fn(it);
@@ -40,8 +40,8 @@ const FX = {
   dirt: p => { if (Math.random() < .5) puff(p, [.45, .38, .3], 1, { a: .4, s0: .08, s1: .24 }); if (Math.random() < .3) grains(p, 2, [.35, .28, .2]); },
   foam: p => { foam(p, 1); if (Math.random() < .3) drops(p, 1, [.75, .9, 1]); },
   water: p => { if (Math.random() < .5) drops(p, 2); },
-  spray: p => { if (Math.random() < .35) emit({ x: p.x, y: p.y, z: p.z, vx: rnd(-.05, .05), vy: -.2, vz: 0, g: 3, drag: .5, life: .9, s0: .05, s1: .035, c: [.8, .93, 1], a: .85, type: 4, floor: null }); },
-  oil: p => { if (Math.random() < .3) emit({ x: p.x, y: p.y, z: p.z, vx: 0, vy: -.1, vz: 0, g: 2, drag: .5, life: 1, s0: .05, s1: .04, c: [.85, .66, .2], a: .9, type: 4, floor: null }); },
+  spray: p => { if (Math.random() < .35) emit({ x: p.x, y: p.y, z: p.z, vx: rnd(-.05, .05), vy: -.2, vz: 0, g: 3, drag: .5, life: .9, s0: .05, s1: .035, c: [.8, .93, 1], a: .85, type: 4, floor: null, liquid: true }); },
+  oil: p => { if (Math.random() < .3) emit({ x: p.x, y: p.y, z: p.z, vx: 0, vy: -.1, vz: 0, g: 2, drag: .5, life: 1, s0: .05, s1: .04, c: [.85, .66, .2], a: .9, type: 4, floor: null, liquid: true }); },
   sand: p => { if (Math.random() < .5) puff(p, [.78, .74, .68], 1, { a: .3, s0: .08, s1: .2 }); },
   woodsand: p => { if (Math.random() < .6) puff(p, [.86, .74, .55], 1, { a: .35, s0: .08, s1: .22 }); if (Math.random() < .3) grains(p, 2, [.85, .7, .5]); },
   polish: (p, k) => { if (Math.random() < .1 * (k || 1)) glints(p, 1, .2); },
@@ -58,25 +58,25 @@ const FX = {
 
 /* ============ 1. paint / clean / coat a surface layer ============ */
 export function paint(o) {
-  const S = base({ kind: 'paint', 
+  const S = base({ kind: 'paint', grabAll: true, 
     input: o.input || 'Scrub', canTurn: o.turn !== false && o.canTurn !== false, tool: o.tool, toolLabel: o.toolLabel || toolName(o.tool),
     ...o,
     enter() {
       const it = I(); this.tasks = []; this.prev = null; this.sq = 0; this.adv = false; this.warnT = 0; this.atT = -9; this.pa = null;
+      if (o.enter) o.enter.call(this);
       const keys = typeof o.parts === 'function' ? o.parts() : o.parts;
       this.keys = keys;
       for (const k of keys) {
         const p = it.parts[k]; if (!p || !p.surf) continue;
-        const t = p.surf.task(o.layer, o.mode || 'sub', { region: o.region ? (P, c) => o.region(P, c, k) : null, faces: o.faces, done: o.doneV, need: o.need, to: o.to });
+        const t = p.surf.task(o.layer, o.mode || 'sub', { region: o.region ? (P, c) => o.region(P, c, k) : null, faces: o.faces === undefined ? [4, 5] : o.faces, done: o.doneV, need: o.need, to: o.to });
         t.key = k; t.part = p; if (t.n > 0) this.tasks.push(t);
       }
       if (o.seq) { this.groups = o.seq.map(g => ({ label: g.label, keys: g.keys, L: g.layout })); this.showGroup(0, true); }
       G.chips = this.groups ? this.groups.map((g, i) => ({ label: g.label, get: () => this.groupFrac(i) })) : (o.chips || []).map(c => ({ label: c.label, get: () => this.fracOf(c.keys) }));
-      if (o.enter) o.enter.call(this);
       if (!this.tasks.length) later(300, () => { if (st() === this) finishStep(); });
     },
     showGroup(i, instant) {
-      const it = I(), g = this.groups[i]; this.sq = i;
+      const it = I(), g = this.groups[i]; this.sq = i; if (typeof g.L === 'function') g.L = g.L(it);
       for (const gr of this.groups) for (const k of gr.keys) if (!g.keys.includes(k)) it.hide(k);
       for (const k of g.keys) { const L = g.L && g.L[k]; if (L) it.layout(k, L, instant || clock.ff ? 0 : .5); else it.home(k, instant || clock.ff ? 0 : .4); }
       if (!instant) later(60, () => setView(this.cam || { preset: 'full' }));
@@ -148,7 +148,7 @@ export function paint(o) {
 
 /* ============ 2. pick chunks (tap / scratch until they break) or grab debris (tap -> lifts out) ============ */
 export function pick(o) {
-  return base({ kind: 'pick', 
+  return base({ kind: 'pick', grabAll: true, 
     input: o.grab ? 'Tap' : 'Scratch', ...o, toolLabel: o.toolLabel || toolName(o.tool),
     enter() { this.list = o.items(); for (const c of this.list) { c.hp = c.hp0 ?? 1; c.gone = false; c.m.visible = true; } if (o.enter) o.enter.call(this); G.chips = [{ label: o.chip || 'Pieces', get: () => this.prog }]; this.last = null; },
     nodes() { return this.list.filter(c => !c.gone).map(c => c.m).concat((o.extraNodes ? o.extraNodes() : [])); },
@@ -205,16 +205,19 @@ export function extract(o) {
       const dW = w.sub(this.w0), par = P.g.parent, pq = par.getWorldQuaternion(new THREE.Quaternion()).invert(), ps = worldScale(par);
       const d = dW.applyQuaternion(pq).divideScalar(ps), ax = new THREE.Vector3(...x.axis).normalize();
       let s = clamp(d.dot(ax), 0, x.thr * 1.2);
-      if (!x.freed) {
-        const lim = x.thr * .1; if (s > lim) { x.strain += (s - lim) * .02 + .012; s = lim + Math.sin(G.time * 60) * .01 * x.thr; G.shake = Math.max(G.shake, .12); if (Math.random() < .2) sfx('creak', 300); if (Math.random() < .3) grains(P.wp(x.mk || [0, 0, 0]), 2, [.5, .25, .1]); }
-        if (x.strain >= 1) { x.freed = true; this.w0.copy(w.copy(this.w0)); sfx('bigpop'); camImpulse(1.1); vib([30, 30, 60]); const wp = P.wp(x.mk || [0, 0, 0]); debris(wp, 26, [.45, .2, .08]); flakes(wp, 18); puff(wp, [.55, .3, .14], 10, { a: .55, s0: .2, s1: .6 }); if (x.onFree) x.onFree.call(this, x); }
-      }
+      if (!x.freed) { const lim = x.thr * .1; x.pull = s > lim ? Math.min(1, (s - lim) / (x.thr * .25)) : 0; if (s > lim) s = lim + Math.sin(G.time * 60) * .012 * x.thr; }
       P.g.position.copy(x.g0).addScaledVector(ax, s); for (const k of x.also || []) { const A = I().parts[k]; A.g.position.copy(A.home.pos).addScaledVector(ax, s); }
       if (Math.abs(s - x.lastS) > .1 * x.thr) { sfx('scrape', 90); x.lastS = s; }
       x.p = x.freed ? clamp(s / x.thr, 0, 1) : clamp(x.strain, 0, 1) * .45; this.recalc();
       if (x.freed && s >= x.thr) this.detach(x);
     },
-    onUp() { const x = this.cur; this.cur = null; if (!x || x.done) return; const P = I().parts[x.key]; P.dragging = false; if (!x.freed) x.strain *= .7; x.p = x.freed ? 0 : x.p; moveTo(P.g, { pos: x.g0 }, .22); for (const k of x.also || []) moveTo(I().parts[k].g, { pos: I().parts[k].home.pos }, .22); this.recalc(); },
+    update(dt) {
+      const x = this.cur; if (!x || x.done || x.freed || !x.pull) return; const P = I().parts[x.key];
+      x.strain += dt * (.45 + .75 * x.pull); G.shake = Math.max(G.shake, .1 + .15 * x.pull); if (Math.random() < dt * 4) sfx('creak', 300); if (Math.random() < dt * 10) grains(P.wp(x.mk || [0, 0, 0]), 2, [.5, .25, .1]);
+      x.p = clamp(x.strain, 0, 1) * .45; this.recalc();
+      if (x.strain >= 1) { x.freed = true; x.pull = 0; this.w0.add(new THREE.Vector3(0, 0, 0)); sfx('bigpop'); camImpulse(1.1); vib([30, 30, 60]); const wp = P.wp(x.mk || [0, 0, 0]); debris(wp, 26, [.45, .2, .08]); flakes(wp, 18); puff(wp, [.55, .3, .14], 10, { a: .55, s0: .2, s1: .6 }); toast('It popped free!'); if (x.onFree) x.onFree.call(this, x); x.popT = G.time; }
+    },
+    onUp() { const x = this.cur; this.cur = null; if (!x || x.done) return; const P = I().parts[x.key]; P.dragging = false; x.pull = 0; if (!x.freed) x.strain *= .85; x.p = x.freed ? 0 : x.p; moveTo(P.g, { pos: x.g0 }, .22); for (const k of x.also || []) moveTo(I().parts[k].g, { pos: I().parts[k].home.pos }, .22); this.recalc(); },
     recalc() { this.prog = this.items.reduce((a, x) => a + (x.done ? 1 : x.p * .9), 0) / this.items.length; },
     detach(x) {
       x.done = true; this.cur = null; const it = I(), P = it.parts[x.key]; P.dragging = false; sfx(x.snd || 'pop'); vib(20); camImpulse(.3);
@@ -232,7 +235,7 @@ export function extract(o) {
 
 /* ============ 4. fasteners: press & hold on a screw to drive it out / in ============ */
 export function screws(o) {
-  return base({ kind: 'screws', 
+  return base({ kind: 'screws', grabAll: true, 
     input: 'Hold', tool: o.tool || 'screw', lockRig: true, ...o, toolLabel: o.toolLabel || toolName(o.tool || 'screw'),
     enter() {
       const it = I(); this.items = o.keys.map(k => ({ key: k, p: 0, done: false })); this.cur = null; G.chips = [{ label: o.chip || 'Screws', get: () => this.prog }];
@@ -309,7 +312,7 @@ export function snap(o) {
 
 /* ============ 6. hold the tool on target spots (grinder, buffer, heat, straighten, vacuum) ============ */
 export function hold(o) {
-  return base({ kind: 'hold', 
+  return base({ kind: 'hold', grabAll: true, 
     input: 'Hold', ...o, toolLabel: o.toolLabel || toolName(o.tool),
     enter() { this.spots = o.spots().map(s => ({ r: .55, ...s, hp: 1, done: false })); this.down = false; G.chips = [{ label: o.chip || 'Spots', get: () => this.prog }]; if (o.enter) o.enter.call(this); },
     nodes() { const it = I(); return (o.parts ? o.parts() : Object.keys(it.parts)).flatMap(k => it.parts[k].g.visible ? it.parts[k].meshes : []); },
@@ -342,7 +345,7 @@ export function hold(o) {
 
 /* ============ 7. trace a highlighted seam/crack: a bead of filler grows along the path ============ */
 export function trace(o) {
-  return base({ kind: 'trace', 
+  return base({ kind: 'trace', grabAll: true, 
     input: 'Trace', lockRig: true, ...o, toolLabel: o.toolLabel || toolName(o.tool || 'filler'),
     enter() {
       const it = I(); this.paths = o.paths().map(p => ({ ...p, cur: 0 }));
@@ -457,12 +460,14 @@ export function bath(o) {
       const cTop = c.position.y + U.H * sy, liquid = c.position.y + U.H * .72 * sy, rest = bb.min.y - RIG.off.y;
       this.lift = Math.max(0, cTop + .35 - rest); this.depth = Math.max(.5, (bb.max.y - RIG.off.y + this.lift) - liquid + .15);
       G.offGoal = new THREE.Vector3(0, this.lift - this.depth * .5, 0);
-      if (clock.ff) RIG.off.y = this.lift; else { const y0 = RIG.off.y; tween(.5, k => { RIG.off.y = lerp(y0, this.lift, k); }); }
+      if (o.startIn) { RIG.off.y = this.lift - this.depth; this.phase = o.swirl ? 'swirl' : 'hold'; this.needsHold = !o.swirl; this.prog = .2; G.ui && G.ui('hold'); }
+      else if (clock.ff) RIG.off.y = this.lift; else { const y0 = RIG.off.y; tween(.5, k => { RIG.off.y = lerp(y0, this.lift, k); }); }
        G.fitExtra = [c]; G.chips = [{ label: o.chip || 'Treatment', get: () => this.prog }]; if (o.enter) o.enter.call(this);
     },
-    nodes() { const it = I(); return Object.values(it.parts).filter(p => p.g.visible && p.state !== 'tray').flatMap(p => p.meshes); },
+    nodes() { const it = I(); if (this.phase === 'clips') return this.clipM.flatMap(g => g.children); return Object.values(it.parts).filter(p => p.g.visible && p.state !== 'tray').flatMap(p => p.meshes); },
     grabAll: false,
     onDown(hit, ray) {
+      if (this.phase === 'clips') { if (hit && hit.object.userData.clip != null) this.tapClip(hit.object.userData.clip); return; }
       if (this.phase === 'carry' && hit) { const n = new THREE.Vector3(); R.camera.getWorldDirection(n); this.plane = new THREE.Plane().setFromNormalAndCoplanarPoint(n, hit.point); this.w0 = hit.point.clone(); this.y0 = RIG.off.y; this.drag = true; sfx('click'); }
       else if (this.phase === 'swirl') { this.last = this.ang(ray); }
     },
@@ -483,7 +488,18 @@ export function bath(o) {
     onUp() { if (this.phase === 'carry' && this.drag) { this.drag = false; const y0 = RIG.off.y; tween(.3, k => { RIG.off.y = lerp(y0, this.lift, k); }); this.prog = 0; } this.last = null; },
     submerge() {
       sfx('splash'); camImpulse(.5); vib(25); const top = this.c.position.clone().add(new THREE.Vector3(0, this.c.userData.H * .72 * this.c.scale.y, 0)); bubbles(top, 14, 1.2, 1.4); foam(top, 10);
+      if (o.dipOnly) { this.prog = 1; this.phase = 'done'; later(600, () => finishStep()); return; }
+      if (o.clips) { this.phase = 'clips'; this.prog = .2; this.clipsOn = [false, false]; this.mkClips(); toast('Clip on the red and the black lead'); return; }
       this.phase = o.swirl ? 'swirl' : 'hold'; this.needsHold = !o.swirl; this.prog = .2; toast(o.swirl ? 'Swirl in circles to clean' : 'Hold the button to run the treatment'); G.ui && G.ui('hold');
+    },
+    mkClips() {
+      if (!this.clipM) { this.clipM = [0, 1].map(i => { const g = new THREE.Group(); g.add(mesh(rbox(.5, .7, .4, .08), plastic(i ? '#1b1b1d' : '#d33a2a', .45))); g.add(mesh(cyl(.05, .05, 2.2, 6), plastic(i ? '#1b1b1d' : '#d33a2a', .5), { p: [0, 1.4, 0] })); g.userData.clip = i; g.traverse(m => { if (m.isMesh) { m.userData.clip = i; m.userData.nofit = true; } }); return g; }); }
+      const c = this.c, U = c.userData; this.clipM.forEach((g, i) => { c.add(g); g.position.set((i ? 1 : -1) * U.W * .38, U.H + .9, 0); g.scale.set(1 / c.scale.x, 1 / c.scale.y, 1 / c.scale.z); g.visible = true; });
+    },
+    tapClip(i) {
+      if (this.clipsOn[i]) return; this.clipsOn[i] = true; const g = this.clipM[i], U = this.c.userData; sfx('click'); sfx('ping'); vib(15);
+      tween(.3, k => { g.position.y = lerp(U.H + .9, U.H + .1, k); }); sparks(g.getWorldPosition(new THREE.Vector3()), 8); this.prog = .2 + this.clipsOn.filter(Boolean).length * .05;
+      if (this.clipsOn.every(Boolean)) { this.phase = 'hold'; this.needsHold = true; G.ui && G.ui('hold'); toast('Hold the button to run the treatment'); }
     },
     update(dt) {
       if (this.phase !== 'hold' || !G.hold) return;
@@ -493,11 +509,12 @@ export function bath(o) {
     },
     done_() {
       if (this.phase === 'done') return; this.phase = 'done'; this.needsHold = false; G.hold = false; G.ui && G.ui('hold'); sfx('chime'); if (o.onDone) o.onDone.call(this);
+      if (o.stay) { later(500, () => finishStep()); return; }
       const y0 = RIG.off.y; G.busy = true; tween(clock.ff ? 0 : .9, k => { RIG.off.y = lerp(y0, 0, k); }, () => { G.busy = false; drops(G.item.root.position, 12); finishStep(); });
     },
-    markers() { if (this.phase === 'carry' && !this.drag) return [{ pos: G.item.root.position.clone(), r: 40, label: 'Drag down' }]; if (this.phase === 'swirl') return [{ pos: this.c.position.clone().add(new THREE.Vector3(0, 1.2, 0)), r: 50, label: 'Swirl' }]; return []; },
-    skip() { if (o.onProg) o.onProg.call(this, 1); if (o.onDone) o.onDone.call(this); RIG.off.y = 0; },
-    exit() { RIG.off.y = 0; G.offGoal = null; RIG.extraQ.identity(); this.needsHold = false; if (this.c) this.c.visible = false; G.fitExtra = []; if (o.exit) o.exit.call(this); },
+    markers() { if (this.phase === 'clips') return this.clipM.filter((g, i) => !this.clipsOn[i]).map(g => ({ pos: g.getWorldPosition(new THREE.Vector3()), r: 30, label: 'Tap' })); if (this.phase === 'carry' && !this.drag) return [{ pos: G.item.root.position.clone(), r: 40, label: 'Drag down' }]; if (this.phase === 'swirl') return [{ pos: this.c.position.clone().add(new THREE.Vector3(0, 1.2, 0)), r: 50, label: 'Swirl' }]; return []; },
+    skip() { if (o.onProg) o.onProg.call(this, 1); if (o.onDone) o.onDone.call(this); if (!o.stay) RIG.off.y = 0; },
+    exit() { if (this.clipM) for (const g of this.clipM) g.visible = false; if (o.stay) { this.needsHold = false; G.offGoal = null; if (o.exit) o.exit.call(this); return; } RIG.off.y = 0; G.offGoal = null; RIG.extraQ.identity(); this.needsHold = false; if (this.c) this.c.visible = false; G.fitExtra = []; if (o.exit) o.exit.call(this); },
     tut: o.tut || { title: o.name, body: o.hint, demo() { if (this.phase === 'swirl') return { type: 'circle', pts: [this.c.position.clone().add(new THREE.Vector3(0, 1.2, 0))] }; const a = G.item.root.position.clone(); return { type: 'drag', pts: [a, a.clone().add(new THREE.Vector3(0, -(this.depth || 2.6), 0))] }; } }
   });
 }
@@ -505,7 +522,7 @@ function setLoopOnce() { }
 
 /* ============ 11. tap targets (in order or any order); hammer strikes, keycap pops, typing ============ */
 export function taps(o) {
-  return base({ kind: 'taps', 
+  return base({ kind: 'taps', grabAll: true, 
     input: 'Tap', lockRig: true, ...o, toolLabel: o.toolLabel || toolName(o.tool || 'hand'),
     enter() { this.list = o.targets().map(t => ({ hits: 0, need: o.hits || 1, done: false, ...t })); this.idx = 0; G.chips = [{ label: o.chip || 'Targets', get: () => this.prog }]; if (o.enter) o.enter.call(this); },
     cur() { return o.ordered ? this.list.filter(t => !t.done).slice(0, 1) : this.list.filter(t => !t.done); },
@@ -582,3 +599,7 @@ import { lump } from './geo.js';
 const lumpGeom = (size, seed) => lump(size, seed, 1.25, .5, 1.1, 1);
 let CRUST = null; export function crustMat() { if (!CRUST) CRUST = new THREE.MeshStandardMaterial({ color: '#5e2a12', roughness: 1, metalness: 0, flatShading: true }); return CRUST; }
 export const v3 = (x, y, z) => new THREE.Vector3(x, y, z);
+/* layout helper: place parts by the centre of their bounds. map: {key: {c:[x,y,z], s, r:[x,y,z]}} */
+export function centered(map) {
+  return it => { const out = {}; for (const k in map) { const m = map[k], p = it.parts[k], s = m.s ?? 1, q = new THREE.Quaternion().setFromEuler(new THREE.Euler(...(m.r || [0, 0, 0]))); const off = p.center.clone().multiplyScalar(s).applyQuaternion(q); out[k] = { p: [m.c[0] - off.x, m.c[1] - off.y, (m.c[2] || 0) - off.z], r: m.r || [0, 0, 0], s }; } return out; };
+}

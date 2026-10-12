@@ -1,7 +1,15 @@
 import padlock from './padlock.js';
 import knife from './knife.js';
+import sword from './sword.js';
+import lighter from './lighter.js';
+import watch from './watch.js';
+import keyboard from './keyboard.js';
+import clock from './clock.js';
+import guitar from './guitar.js';
+import typewriter from './typewriter.js';
+import pistol from './pistol.js';
 
-export const LEVELS = [padlock, knife];
+export const LEVELS = [padlock, knife, sword, lighter, watch, keyboard, clock, guitar, typewriter, pistol];
 const ALL = [
   ['padlock', 'Rusty Padlock', 'Easy', '3-4 min'], ['knife', 'Pocket Knife', 'Easy-Medium', '4-5 min'], ['sword', 'Rusty Longsword', 'Medium', '5-6 min'],
   ['lighter', 'Vintage Lighter', 'Medium-High', '6-7 min'], ['watch', 'Wristwatch', 'Medium', '5-6 min'], ['keyboard', 'Old PC Keyboard', 'High', '6-8 min'],

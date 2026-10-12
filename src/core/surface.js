@@ -31,13 +31,15 @@ uniform float uKind; uniform vec3 uBase; uniform vec2 uBaseRM; uniform float uSc
 uniform vec3 uDirtC; uniform vec2 uDirtRO; uniform vec3 uRust1; uniform vec3 uRust2; uniform vec3 uCrustC;
 uniform vec3 uSandC; uniform float uSandR; uniform vec3 uPolC; uniform float uPolR;
 uniform vec3 uFinC; uniform vec4 uFinP; uniform float uWetG; uniform vec3 uGrainAx; uniform float uGrainS; uniform vec3 uGlow; uniform float uBump; uniform float uResG;
-uniform vec3 uWood2;
+uniform vec3 uWood2; uniform float uUseMap;
 varying vec3 vMP; varying vec3 vMN;
-float sHash(vec3 p){ p=fract(p*.3183099+.1); p*=17.; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }
-float sNoise(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.-2.*f);
-  return mix(mix(mix(sHash(i),sHash(i+vec3(1,0,0)),f.x),mix(sHash(i+vec3(0,1,0)),sHash(i+vec3(1,1,0)),f.x),f.y),
-             mix(mix(sHash(i+vec3(0,0,1)),sHash(i+vec3(1,0,1)),f.x),mix(sHash(i+vec3(0,1,1)),sHash(i+vec3(1,1,1)),f.x),f.y),f.z); }
-float sFbm(vec3 p){ float s=0., a=.5; for(int i=0;i<3;i++){ s+=a*sNoise(p); p=p*2.03+1.7; a*=.5; } return s/.875; }
+vec3 sG3(vec3 p){ p=vec3(dot(p,vec3(127.1,311.7,74.7)),dot(p,vec3(269.5,183.3,246.1)),dot(p,vec3(113.5,271.9,124.6))); return -1.+2.*fract(sin(p)*43758.5453); }
+float sNoise(vec3 p){ vec3 i=floor(p), f=fract(p); vec3 u=f*f*f*(f*(f*6.-15.)+10.);
+  float n=mix(mix(mix(dot(sG3(i),f),dot(sG3(i+vec3(1,0,0)),f-vec3(1,0,0)),u.x),mix(dot(sG3(i+vec3(0,1,0)),f-vec3(0,1,0)),dot(sG3(i+vec3(1,1,0)),f-vec3(1,1,0)),u.x),u.y),
+              mix(mix(dot(sG3(i+vec3(0,0,1)),f-vec3(0,0,1)),dot(sG3(i+vec3(1,0,1)),f-vec3(1,0,1)),u.x),mix(dot(sG3(i+vec3(0,1,1)),f-vec3(0,1,1)),dot(sG3(i+vec3(1,1,1)),f-vec3(1,1,1)),u.x),u.y),u.z);
+  return clamp(.5+.9*n,0.,1.); }
+const mat3 sRot=mat3(.8,.36,-.48,-.6,.48,-.64,0.,.8,.6);
+float sFbm(vec3 p){ float s=0., a=.5; for(int i=0;i<3;i++){ s+=a*sNoise(p); p=sRot*p*2.03+1.7; a*=.5; } return s/.875; }
 vec2 sCell(float c, vec2 uv){ float col=mod(c,3.), row=floor(c/3.+.01); return vec2((col*uAtlas.z+uPad+uv.x*(uAtlas.z-2.*uPad))/uAtlas.x,(row*uAtlas.w+uPad+uv.y*(uAtlas.w-2.*uPad))/uAtlas.y); }
 float sMk(float m,float n){ return smoothstep(.22,.62,m*(.62+.76*n)); }
 `;
@@ -51,11 +53,12 @@ vec4 sA=vec4(0.), sB=vec4(0.);
 }
 vec3 sP=vMP*uNS+uSeed;
 float nL=sFbm(sP*.55), nM=sFbm(sP*2.2+3.7), nH=sNoise(sP*11.);
-vec3 sCol=uBase; float sR=uBaseRM.x, sM=uBaseRM.y, sCC=0., sH=0.;
+vec3 sCol=uUseMap>.5?diffuseColor.rgb:uBase; float sR=uBaseRM.x, sM=uBaseRM.y, sCC=0.; vec2 sGr=vec2(0.);
+vec2 dL=vec2(dFdx(nL),dFdy(nL)), dM=vec2(dFdx(nM),dFdy(nM)), dHh=vec2(dFdx(nH),dFdy(nH));
 if(uKind<.5){
   sCol*= .8+.4*nL;
-  float scr=smoothstep(.74,.96,sNoise(sP*vec3(9.,.7,9.)+nL))*(1.-sB.g)*uScratch; sCol*=1.-.35*scr; sR=mix(sR,.7,scr); sH-=scr*.25;
-  float pit=smoothstep(.78,.93,sFbm(sP*4.6+9.1))*(1.-sB.g)*uScratch; sCol*=1.-.45*pit; sH-=pit*.6;
+  float scrN=smoothstep(.74,.96,sNoise(sP*vec3(9.,.7,9.)+nL)), scrW=(1.-sB.g)*uScratch, scr=scrN*scrW; sCol*=1.-.35*scr; sR=mix(sR,.7,scr); sGr-=vec2(dFdx(scrN),dFdy(scrN))*scrW*.25;
+  float pitN=smoothstep(.78,.93,sFbm(sP*4.6+9.1)), pit=pitN*scrW; sCol*=1.-.45*pit; sGr-=vec2(dFdx(pitN),dFdy(pitN))*scrW*.6;
   float sd=smoothstep(.02,.8,sB.g); sCol=mix(sCol,uSandC*(.9+.14*nH+.06*sNoise(sP*vec3(14.,1.,14.))),sd); sR=mix(sR,uSandR,sd); sM=mix(sM,1.,sd*.8);
   float pol=smoothstep(.0,.85,sB.b*(1.+(nH-.5)*.35)); sCol=mix(sCol,uPolC,pol); sR=mix(sR,uPolR,pol); sM=mix(sM,1.,pol);
 } else if(uKind<1.5){
@@ -64,7 +67,7 @@ if(uKind<.5){
   float ring=.5+.5*sin((length(pp)*uGrainS*4.+g1*4.)*2.);
   float gr=clamp(g1*.6+g2*.25+ring*.22,0.,1.);
   vec3 dry=mix(uBase*.7,uBase*1.15,gr); dry=mix(dry,vec3(dot(dry,vec3(.33))),.35);
-  sCol=dry; sR=uBaseRM.x; sM=0.; sH=(g2-.5)*.6+(1.-sB.g)*(g1-.5)*.4*uScratch;
+  sCol=dry; sR=uBaseRM.x; sM=0.; sGr=vec2(dFdx(g2),dFdy(g2))*.6+vec2(dFdx(g1),dFdy(g1))*(1.-sB.g)*.4*uScratch;
   float sd=smoothstep(.02,.8,sB.g); vec3 fresh=mix(uSandC*.78,uSandC*1.1,gr); sCol=mix(sCol,fresh,sd); sR=mix(sR,uSandR,sd);
   float fin=smoothstep(.1,.75,sB.a*(1.+(nL-.5)*.5)); vec3 stain=mix(uFinC*.55,uFinC*1.2,gr)*mix(vec3(1.),uWood2,ring*.4); sCol=mix(sCol,stain,fin); sR=mix(sR,uFinP.x,fin); sCC=fin*uFinP.z;
   float pol=smoothstep(.0,.85,sB.b); sR=mix(sR,uPolR,pol); sCC=max(sCC,pol*uFinP.z);
@@ -75,17 +78,17 @@ if(uKind<.5){
 if(uKind<.5||uKind>1.5){
   float fin=smoothstep(.12,.7,sB.a*(1.+(nL-.5)*.5)); sCol=mix(sCol,uFinC*(.96+.08*nH),fin); sR=mix(sR,uFinP.x,fin); sM=mix(sM,uFinP.y,fin); sCC=max(sCC,fin*uFinP.z);
 }
-float sRes=max(sMk(sB.r,nM),uResG*.0); sCol=mix(sCol,vec3(.018,.017,.016)*(.7+.6*nH),sRes); sR=mix(sR,.88,sRes); sM=mix(sM,.15,sRes);
+float sRes=max(sMk(sB.r,nM),uResG*smoothstep(.1,.9,max(sA.r,sA.g)+.35)*(.75+.25*nM)); sCol=mix(sCol,vec3(.018,.017,.016)*(.7+.6*nH),sRes); sR=mix(sR,.88,sRes); sM=mix(sM,.15,sRes);
 float sDt=sMk(sB.r*0.+sA.b,nL)*uDirtRO.y; vec3 dC=uDirtC*(.8+.35*nM); sCol=mix(sCol,dC,sDt); sR=mix(sR,uDirtRO.x,sDt); sM=mix(sM,sM*.25,sDt); 
-float sCr=sMk(sA.g,nM); vec3 crC=uCrustC*(.55+.9*nH)*(.8+.3*nL); sCol=mix(sCol,crC,sCr); sR=mix(sR,1.,sCr); sM=mix(sM,0.,sCr); sH+=sCr*(1.2+nM*2.+nH*.4);
+float sCr=sMk(sA.g,nM); vec3 crC=uCrustC*(.55+.9*nH)*(.8+.3*nL); sCol=mix(sCol,crC,sCr); sR=mix(sR,1.,sCr); sM=mix(sM,0.,sCr); sGr+=sCr*(dM*2.+dHh*.4);
 float sRu=sMk(sA.r,nM); float rv=smoothstep(.25,.75,nM*.7+nH*.5), och=smoothstep(.55,.8,sFbm(sP*.9+20.));
 vec3 ruC=mix(mix(uRust1,uRust2,rv),uRust2*vec3(1.1,1.25,1.1),och*.5)*(.55+.7*nL)*(1.-.25*smoothstep(.62,.82,sFbm(sP*6.3+11.)));
-sCol=mix(sCol,ruC,sRu); sR=mix(sR,1.,sRu); sM=mix(sM,0.,sRu); sH+=sRu*(.5+nM*1.3+nL*.7+nH*.25);
+sCol=mix(sCol,ruC,sRu); sR=mix(sR,1.,sRu); sM=mix(sM,0.,sRu); sGr+=sRu*(dM*1.3+dL*.7+dHh*.25);
 float sWet=max(sA.a,uWetG); sCol*=1.-.32*sWet; sR*=1.-.7*sWet; sCC=max(sCC,sWet*.9);
 diffuseColor.rgb=sCol;
 `;
 const FRAG_NORMAL = `
-{ vec3 pv=-vViewPosition; vec2 dH=vec2(dFdx(sH),dFdy(sH))*uBump; vec3 sx=dFdx(pv), sy=dFdy(pv); vec3 R1=cross(sy,normal), R2=cross(normal,sx);
+{ vec3 pv=-vViewPosition; vec2 dH=sGr*uBump; vec3 sx=dFdx(pv), sy=dFdy(pv); vec3 R1=cross(sy,normal), R2=cross(normal,sx);
   float det=dot(sx,R1); vec3 gr=sign(det)*(dH.x*R1+dH.y*R2); normal=normalize(abs(det)*normal-gr); }
 `;
 
@@ -114,12 +117,12 @@ export class Surface {
       uPolC: { value: C(o.pol || '#d6dadf') }, uPolR: { value: o.polR ?? .08 },
       uFinC: { value: C(o.fin || '#6b2a10') }, uFinP: { value: new THREE.Vector4(o.finR ?? .35, o.finM ?? 0, o.finCC ?? .6, 0) },
       uWetG: { value: 0 }, uGrainAx: { value: new THREE.Vector3(...(o.grain || [0, 1, 0])).normalize() }, uGrainS: { value: o.grainS || 1 },
-      uGlow: { value: new THREE.Color(0, 0, 0) }, uBump: { value: o.bump ?? .45 }, uResG: { value: 0 }, uWood2: { value: C(o.wood2 || '#ffd2a0') }
+      uGlow: { value: new THREE.Color(0, 0, 0) }, uBump: { value: o.bump ?? .45 }, uResG: { value: 0 }, uWood2: { value: C(o.wood2 || '#ffd2a0') }, uUseMap: { value: o.map ? 1 : 0 }
     };
   }
   /* material for one mesh (shares uniforms + masks, own uMaskMat) */
   material(extra = {}) {
-    const m = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: .6, metalness: 0, clearcoat: 1, clearcoatRoughness: .12, envMapIntensity: 1.15, ...extra });
+    const m = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: .6, metalness: 0, clearcoat: 1, clearcoatRoughness: .12, envMapIntensity: 1.15, map: this.o.map || null, ...extra });
     const mm = { value: new THREE.Matrix4() }; const self = this;
     m.onBeforeCompile = sh => {
       Object.assign(sh.uniforms, self.u); sh.uniforms.uMaskMat = mm;
@@ -134,7 +137,7 @@ export class Surface {
         .replace('#include <lights_physical_fragment>', '#include <lights_physical_fragment>\nmaterial.clearcoat=clamp(sCC,0.,1.);')
         .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance+=uGlow;');
     };
-    m.customProgramCacheKey = () => 'surf1';
+    m.customProgramCacheKey = () => 'surf1' + (this.o.map ? 'm' : '');
     m.userData.maskMat = mm; this.mats.push(m); return m;
   }
   add(mesh) { this.meshes.push(mesh); mesh.userData.surf = this; return mesh; }
