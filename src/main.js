@@ -13,6 +13,8 @@ import { LEVELS, UPCOMING } from './levels/index.js';
 const SAVE_KEY = 'rw_save_v1';
 const save = store.json(SAVE_KEY, {});
 const persist = () => store.setJson(SAVE_KEY, save);
+/* padlock lost its first (inspection) step: shift an in-progress save back by one */
+if (!save._v2) { if (save.padlock && save.padlock.step > 0) save.padlock.step--; save._v2 = 1; store.setJson(SAVE_KEY, save); }
 const qs = new URLSearchParams(location.search);
 let tickKeys = () => { };
 let qCap = +(store.get('rw_q') ?? 3), dprCap = 2, lastTs = 0, slow = 0, frames = 0;

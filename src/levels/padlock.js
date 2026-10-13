@@ -1,7 +1,7 @@
 /* Level 01 - Padlock: freeing a seized mechanism and polishing a compact brass lock */
 import * as THREE from 'three';
 import { rbox, cyl, tube, mesh, mat, metal, box, lump, sphere } from '../assets/geo.js';
-import { paint, pick, extract, screws, snap, inspect, bath, cycle, compare, stage, chunksOn, I, lp } from '../game/systems/index.js';
+import { paint, pick, extract, screws, snap, bath, cycle, compare, stage, chunksOn, I, lp } from '../game/systems/index.js';
 import { G } from '../game/game.js';
 import { clamp, smooth } from '../core/util.js';
 
@@ -59,11 +59,6 @@ export default {
   steps(it) {
     const P = it.parts, metals = ['body', 'shackle'];
     return [
-      inspect({
-        id: 'inspect', name: 'Inspect the Damage', hint: 'Tap each glowing spot to inspect the damage.', done: 'Damage assessed', cam: { preset: 'full' },
-        spots: () => [{ key: 'body', p: [-.7, .5, BD / 2 + .1], label: 'Rust', note: 'heavy corrosion' }, { key: 'shackle', p: [LEG, 1.35, .2], label: 'Shackle', note: 'seized in the body' }, { key: 'body', p: [0, -.7, BD / 2 + .1], label: 'Keyhole', note: 'packed with dirt' }, { key: 'body', p: [1.1, -.9, BD / 2 + .1], label: 'Scratches', note: 'dull, pitted brass' }],
-        tut: { title: 'Look it over', body: 'Every restoration starts with an inspection. Tap the glowing spots to see what needs fixing.' }
-      }),
       paint({
         id: 'spray', name: 'Apply Penetrating Fluid', tool: 'spray', input: 'Sweep', hint: 'Spray the shackle and the top seam so the fluid soaks into the rust.', done: 'Fluid soaking in', cam: { preset: 'work', focus: [0, 1.3, 0], r: 2.3 },
         parts: metals, layer: 'wet', mode: 'add', amt: .55, rad: .42, fx: 'spray', snd: 'soap', sndGap: 140, req: .85, region: (p, c, k) => k === 'shackle' ? p.y < 1.9 : p.y > .6,

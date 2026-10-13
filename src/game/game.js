@@ -156,13 +156,26 @@ export function finishStep(skipped) {
   };
   if (clock.ff) go(); else later(skipped ? 450 : 950, go);
 }
-export function skipStep() {
-  const s = st(); if (!s || G.finishing || G.mode !== 'play') return;
+/* settle whatever is left of the current step instantly (used by Skip and by the 80% auto-finish) */
+function completeRest(s, skipped) {
   G.busy = false; const ff = clock.ff; clock.ff = true; const np = PART.list.length;
   try { s.skip && s.skip(); } catch (e) { console.error('skip ' + s.id, e); }
   for (const sf of G.item.surfs) sf.finishFades();
   clock.ff = ff; PART.list.length = Math.min(PART.list.length, np);
-  finishStep(true);
+  finishStep(skipped);
+}
+export function skipStep() {
+  const s = st(); if (!s || G.finishing || G.mode !== 'play') return;
+  completeRest(s, true);
+}
+/* every step ends at 80% completion: the rest is finished automatically.
+   Paint steps finish themselves at 80% (with a smooth wipe); compare waits for the Finish button;
+   steps that reach 100% on their own are left to their own completion. */
+export const AUTO_DONE = .8;
+function autoFinish(s, dt) {
+  if (s.compare || s.noAuto || s.kind === 'paint' || G.finishing || G.busy || RIG.flipping || G.paused) { s.autoT = 0; return; }
+  const p = s.prog || 0;
+  if (p >= AUTO_DONE && p < .999) { s.autoT = (s.autoT || 0) + dt; if (s.autoT > .25) completeRest(s, false); } else s.autoT = 0;
 }
 /* fast-forward: apply steps 0..n-1 instantly */
 export function ff(n) {
@@ -191,7 +204,7 @@ export function updateGame(dt) {
   const s = st();
   if (G.item) { G.item.update(dt); G.item.updateTray(dt, R.camera); }
   if (G.before) G.before.update(dt);
-  if (s && G.mode === 'play' && !G.paused) { try { s.update && s.update(dt); } catch (e) { console.error(e); } }
+  if (s && G.mode === 'play' && !G.paused) { try { s.update && s.update(dt); } catch (e) { console.error(e); } if (st() === s) autoFinish(s, dt); }
   /* idle tool pose: rest the tool near the work */
   if (s && T.node && !G.down && performance.now() - (T.aimT || 0) > 1200 && canAct()) {
     let q = null; try { const d = s.tut && s.tut.demo && s.tut.demo.call(s); q = d && d.pts && d.pts[0]; } catch (e) { }

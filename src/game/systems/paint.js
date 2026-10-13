@@ -82,7 +82,7 @@ export function paint(o) {
       if (fn && bn && fd / fn >= .8 && bd / bn < .7) { this.atT = G.time; toast('Great! Turning it over…', 1500); later(400, () => { if (st() === this && !G.down && !G.finishing) turnItem(); }); }
     },
     check() {
-      const req = o.req ?? .8;
+      const req = Math.min(o.req ?? .8, .8); /* every cleaning step ends at 80% coverage */
       if (this.groups) {
         const i = this.sq, f = this.groupFrac(i); let tot = 0; this.groups.forEach((g, j) => { tot += j < i ? 1 : j === i ? Math.min(1, f / req) : 0; }); this.prog = tot / this.groups.length;
         this.autoTurn();
@@ -93,7 +93,7 @@ export function paint(o) {
         }
         return;
       }
-      let d = 0, n = 0; for (const t of this.tasks) { d += t.frac() * t.n; n += t.n; } const f = n ? d / n : 1; this.prog = Math.min(1, f / req);
+      let d = 0, n = 0; for (const t of this.tasks) { d += t.frac() * t.n; n += t.n; } const f = n ? d / n : 1; this.prog = Math.min(1, f);
       if (o.onTick) o.onTick.call(this, this.prog);
       this.autoTurn();
       if (f >= req) this.finish();
