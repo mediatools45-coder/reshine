@@ -1,16 +1,17 @@
 /* game state, object rig + camera rig, step manager, input routing */
 import * as THREE from 'three';
-import { R, raycast, rayAt, project } from './engine.js';
-import { T, setTool, toolAim, updateTool } from './tools.js';
-import { sfx, setLoop } from './audio.js';
-import { glints, clearParticles, P as PART } from './particles.js';
-import { clamp, lerp, ease, tween, later, clock, cancelAll, vib, store } from './util.js';
+import { R, raycast, rayAt, project } from '../render/engine.js';
+import { aimLights } from '../render/lighting.js';
+import { T, setTool, toolAim, updateTool } from '../assets/tools.js';
+import { sfx, setLoop } from '../fx/audio.js';
+import { glints, clearParticles, P as PART } from '../fx/particles.js';
+import { clamp, lerp, ease, tween, later, clock, cancelAll, vib, store } from '../core/util.js';
 import { Item } from './item.js';
 
 export const STAGE = new THREE.Vector3(0, .2, 0);
 export const G = {
   mode: 'boot', level: null, item: null, before: null, steps: [], step: -1, finishing: false, busy: false, down: false, hold: false,
-  paused: false, time: 0, shake: 0, autoTurn: true, coins: 0, chips: [], cmp: .5, flags: {}, log: []
+  paused: false, time: 0, shake: 0, autoTurn: true, chips: [], cmp: .5, flags: {}, log: []
 };
 export const HOOK = { ui: null, complete: null }; /* filled by ui.js / main.js */
 
@@ -43,15 +44,26 @@ function updateRig(dt) {
   it.root.quaternion.copy(RIG.q).multiply(new THREE.Quaternion().setFromAxisAngle(turnAxis(), RIG.flip)).multiply(RIG.extraQ);
   if (G.before) { G.before.root.position.copy(it.root.position); G.before.root.quaternion.copy(it.root.quaternion); G.before.root.scale.copy(it.root.scale); }
 }
+const _ax = new THREE.Vector3(), _r = new THREE.Vector3(), _u = new THREE.Vector3(), _qq = new THREE.Quaternion();
+/* free trackball: screen drag (px) spins the object around the camera's right/up axes */
 export function rigDrag(dx, dy, dt) {
-  const k = .0085, w = new THREE.Vector3(dy * k, dx * k, 0);
-  const ang = w.length(); if (ang > 0) RIG.q.premultiply(new THREE.Quaternion().setFromAxisAngle(w.clone().normalize(), ang));
+  const k = .0085; R.camera.matrixWorld.extractBasis(_r, _u, _ax);
+  const w = _r.clone().multiplyScalar(dy * k).addScaledVector(_u, dx * k), ang = w.length();
+  if (ang > 0) RIG.q.premultiply(_qq.setFromAxisAngle(_ax.copy(w).normalize(), ang));
   RIG.home = false; const inv = 1 / Math.max(dt, .008); RIG.w.lerp(w.multiplyScalar(inv), .5);
 }
-export function resetView() { RIG.home = true; RIG.w.set(0, 0, 0); RIG.spin = 0; CAM.uzoom = 1; CAM.uaz = 0; CAM.uel = 0; }
+/* twist around the view axis (two-finger rotate) */
+export function rigRoll(a) { R.camera.getWorldDirection(_ax); RIG.q.premultiply(_qq.setFromAxisAngle(_ax, -a)); RIG.home = false; RIG.w.set(0, 0, 0); }
+/* move the view target in the screen plane (px) */
+export function camPan(dx, dy) {
+  R.camera.matrixWorld.extractBasis(_r, _u, _ax); const s = CAM.dist * 2 * Math.tan(R.camera.fov * Math.PI / 360) / Math.max(1, R.H);
+  CAM.upan.addScaledVector(_r, -dx * s).addScaledVector(_u, dy * s); const m = CAM.gdist * .6; if (CAM.upan.length() > m) CAM.upan.setLength(m);
+}
+export function camZoom(f) { CAM.uzoom = clamp(CAM.uzoom * f, .35, 2); }
+export function resetView() { RIG.home = true; RIG.w.set(0, 0, 0); RIG.spin = 0; CAM.uzoom = 1; CAM.uaz = 0; CAM.uel = 0; CAM.upan.set(0, 0, 0); }
 
 /* ---------------- camera rig ---------------- */
-export const CAM = { t: new THREE.Vector3(0, 0, 0), gt: new THREE.Vector3(), dist: 14, gdist: 14, el: .25, gel: .25, az: 0, gaz: 0, uzoom: 1, uaz: 0, uel: 0, view: null, off: .07 };
+export const CAM = { t: new THREE.Vector3(0, 0, 0), gt: new THREE.Vector3(), dist: 14, gdist: 14, el: .25, gel: .25, az: 0, gaz: 0, uzoom: 1, uaz: 0, uel: 0, upan: new THREE.Vector3(), view: null, off: .07 };
 /* view: {preset:'full'|'work'|'macro'|'show'|'tray', focus:[x,y,z] item-local or part key, r: radius, el, az} */
 export function setView(v = {}, instant) {
   const it = G.item; if (!it) return;
@@ -69,7 +81,7 @@ export function setView(v = {}, instant) {
   if (preset === 'full' || preset === 'show') r = Math.max(r, 1.5);
   const vf = R.camera.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * R.camera.aspect), f = Math.min(vf, hf);
   CAM.gt.copy(c); CAM.gdist = r / Math.sin(f / 2) * (v.k || 1.02); CAM.gel = v.el ?? .22; CAM.gaz = v.az ?? 0; CAM.view = v;
-  CAM.uzoom = 1; CAM.uaz = 0; CAM.uel = 0;
+  CAM.uzoom = 1; CAM.uaz = 0; CAM.uel = 0; CAM.upan.set(0, 0, 0);
   RIG.spin = preset === 'show' ? .25 : 0;
   if (instant || clock.ff) { CAM.t.copy(CAM.gt); CAM.dist = CAM.gdist; CAM.el = CAM.gel; CAM.az = CAM.gaz; }
 }
@@ -86,18 +98,19 @@ function fitBox() {
   const r = Math.max(sz.x / 2 * (R.camera.aspect < 1 ? 1 : .8), sz.y / 2, s.radius * .72);
   return { c: s.center, r };
 }
+const _tg = new THREE.Vector3();
 function updateCam(dt) {
   const r = 1 - Math.exp(-5.5 * dt), r2 = 1 - Math.exp(-8 * dt);
   CAM.uel = clamp(CAM.uel, -.6, .7);
   const gel = clamp(CAM.gel + CAM.uel, -.3, 1.35), gaz = CAM.gaz + CAM.uaz, gd = CAM.gdist * CAM.uzoom;
-  CAM.el += (gel - CAM.el) * r2; CAM.az += (gaz - CAM.az) * r2; CAM.dist += (gd - CAM.dist) * r2; CAM.t.lerp(CAM.gt, r);
+  CAM.el += (gel - CAM.el) * r2; CAM.az += (gaz - CAM.az) * r2; CAM.dist += (gd - CAM.dist) * r2; CAM.t.lerp(_tg.copy(CAM.gt).add(CAM.upan), r);
   const c = R.camera, ce = Math.cos(CAM.el), sh = G.shake;
   const j = sh ? new THREE.Vector3((Math.random() - .5) * sh * .12, (Math.random() - .5) * sh * .12, 0) : new THREE.Vector3();
   c.position.set(CAM.t.x + CAM.dist * ce * Math.sin(CAM.az), CAM.t.y + CAM.dist * Math.sin(CAM.el), CAM.t.z + CAM.dist * ce * Math.cos(CAM.az)).add(j);
   c.lookAt(CAM.t.clone().add(j)); G.shake = Math.max(0, G.shake - dt * 3);
   const W = R.W, H = R.H; c.setViewOffset(W, H, 0, H * CAM.off, W, H); c.updateProjectionMatrix();
   R.focus = CAM.dist; R.aperture = clamp(9 / CAM.dist, .5, 1.2);
-  R.key.position.copy(CAM.t).add(new THREE.Vector3(-7, 12, 8)); R.key.target.position.copy(CAM.t);
+  aimLights(CAM.t);
 }
 export function camImpulse(k = .8) { G.shake = Math.max(G.shake, k); }
 
@@ -130,7 +143,7 @@ export function enterStep(i) {
 }
 export function finishStep(skipped) {
   const s = st(); if (!s || G.finishing) return; G.finishing = true; G.hold = false; G.down = false; T.spinning = false; setLoop(null);
-  s.prog = 1; G.coins += skipped ? 5 : 25;
+  s.prog = 1;
   G.log.push({ ev: skipped ? 'step_skip' : 'step_complete', level: G.level.id, step: s.id, t: G.time });
   if (!clock.ff) { sfx('chime'); vib(30); const c = CAM.t.clone(); glints(c, 14, Math.min(2.4, CAM.dist * .12)); }
   HOOK.ui && HOOK.ui('finish', s, skipped);
@@ -164,44 +177,12 @@ export function ff(n) {
   if (n >= G.steps.length) HOOK.complete && HOOK.complete(); else enterStep(n);
 }
 
-/* ---------------- input ---------------- */
-const ptrs = new Map(); let mode = null, pinch = null;
+/* ---------------- input state shared with src/input/controls.js ---------------- */
 export const canAct = () => G.mode === 'play' && !G.paused && !G.busy && !G.finishing && !RIG.flipping && st();
 function pickNodes(s) { try { return (s.nodes ? s.nodes() : []).filter(Boolean); } catch (e) { console.error(e); return []; } }
 export function pickAt(x, y) { const s = st(); return { ray: rayAt(x, y), hit: s ? raycast(x, y, pickNodes(s)) : null, x, y }; }
-function freePoint(ray) { const n = new THREE.Vector3(); R.camera.getWorldDirection(n); const pl = new THREE.Plane().setFromNormalAndCoplanarPoint(n, CAM.t); const p = new THREE.Vector3(); return ray.intersectPlane(pl, p) ? p : null; }
-export function bindInput(cv) {
-  cv.addEventListener('contextmenu', e => e.preventDefault());
-  cv.addEventListener('pointerdown', e => {
-    if (G.mode === 'boot' || G.paused) return; HOOK.ui && HOOK.ui('nudge'); try { cv.setPointerCapture(e.pointerId); } catch (_) { }
-    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, t: e.timeStamp });
-    if (ptrs.size === 2) { if (mode === 'tool') endTool(); mode = 'pinch'; const [a, b] = [...ptrs.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: CAM.uzoom }; return; }
-    if (ptrs.size > 2) return;
-    const s = st(); let r = null;
-    if (s && canAct() && e.button === 0) { r = pickAt(e.clientX, e.clientY); if (!r.hit && s.assist) r.hit = s.assist(e.clientX, e.clientY); }
-    if (r && (r.hit || s.grabAll)) {
-      mode = 'tool'; G.down = true; toolAim(r.hit, r.ray, true, freePoint(r.ray)); HOOK.ui && HOOK.ui('used');
-      try { s.onDown && s.onDown(r.hit, r.ray, r); } catch (er) { console.error(er); }
-    } else { mode = 'orbit'; if (G.mode === 'play' && s && !s.lockRig) { RIG.drag = true; RIG.w.set(0, 0, 0); } else if (G.mode !== 'play') { RIG.drag = true; } }
-  });
-  cv.addEventListener('pointermove', e => {
-    const p = ptrs.get(e.pointerId), s = st();
-    if (!p) { if (e.pointerType === 'mouse' && s && canAct() && T.node) { const r = pickAt(e.clientX, e.clientY); toolAim(r.hit, r.ray, false, freePoint(r.ray)); } return; }
-    HOOK.ui && HOOK.ui('nudge'); const dx = e.clientX - p.x, dy = e.clientY - p.y, dt = (e.timeStamp - p.t) / 1000; p.x = e.clientX; p.y = e.clientY; p.t = e.timeStamp;
-    if (mode === 'pinch' && ptrs.size >= 2 && pinch) { const [a, b] = [...ptrs.values()]; CAM.uzoom = clamp(pinch.z * pinch.d / Math.max(20, Math.hypot(a.x - b.x, a.y - b.y)), .45, 1.8); const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2; if (pinch.mx != null && st() && !st().lockRig) rigDrag(mx - pinch.mx, my - pinch.my, dt); pinch.mx = mx; pinch.my = my; }
-    else if (mode === 'orbit') { if (RIG.drag) rigDrag(dx, dy, dt); }
-    else if (mode === 'tool' && s) { const r = pickAt(e.clientX, e.clientY); toolAim(r.hit, r.ray, true, freePoint(r.ray)); try { s.onMove && s.onMove(r.hit, r.ray, r); } catch (er) { console.error(er); } }
-  });
-  const up = e => {
-    if (!ptrs.has(e.pointerId)) return; ptrs.delete(e.pointerId);
-    if (mode === 'pinch') { if (ptrs.size < 2) { mode = null; pinch = null; ptrs.clear(); } return; }
-    if (mode === 'tool') endTool(); else if (mode === 'orbit') RIG.drag = false; mode = null;
-  };
-  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
-  cv.addEventListener('wheel', e => { e.preventDefault(); CAM.uzoom = clamp(CAM.uzoom * Math.exp(e.deltaY * .0012), .45, 1.8); }, { passive: false });
-}
-function endTool() { const s = st(); G.down = false; mode = null; T.spinning = false; try { s && s.onUp && s.onUp(); } catch (er) { console.error(er); } T.goalLift = .35 * T.scale; }
-export function resetPointers() { ptrs.clear(); mode = null; pinch = null; G.down = false; RIG.drag = false; }
+export function freePoint(ray) { const n = new THREE.Vector3(); R.camera.getWorldDirection(n); const pl = new THREE.Plane().setFromNormalAndCoplanarPoint(n, CAM.t); const p = new THREE.Vector3(); return ray.intersectPlane(pl, p) ? p : null; }
+export function endTool() { const s = st(); G.down = false; T.spinning = false; try { s && s.onUp && s.onUp(); } catch (er) { console.error(er); } T.goalLift = .35 * T.scale; }
 
 /* ---------------- per-frame ---------------- */
 export function updateGame(dt) {

@@ -1,0 +1,14 @@
+import { chromium } from 'playwright-core';
+const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const page = await browser.newPage({ viewport: { width: 400, height: 780 } });
+page.on('pageerror', e => console.log('ERR', e.message)); page.on('console', m => console.log('LOG', m.text()));
+await page.goto('file:///home/user/reshine/dist/index.html?lowq=1');
+await page.waitForFunction(() => window.__g && !document.getElementById('load').classList.contains('on'), null, { timeout: 180000 });
+const W = f => page.evaluate(f);
+await W(() => { const g = window.__g; g.G.dtCap = .5; g.openLevel('knife'); g.startLevel(g.G.level, 0); g.enterStep(g.G.steps.findIndex(s => s.id === 'dust')); });
+await page.waitForTimeout(3000);
+console.log(await W(() => { const g = window.__g, s = g.st(); return JSON.stringify({ id: s.id, mode: g.G.mode, busy: g.G.busy, fin: g.G.finishing, tasks: s.tasks.map(t => [t.key, t.n, t.frac()]), auto: g.auto().bbox }); }));
+const M = page.mouse; await M.move(200, 300); await M.down(); for (let i = 0; i < 40; i++) { await M.move(150 + (i % 2) * 100, 300 + i * 3); await page.waitForTimeout(20); } await M.up();
+console.log(await W(() => { const g = window.__g, s = g.st(); return JSON.stringify({ down: g.G.down, tasks: s.tasks.map(t => [t.key, t.n, t.frac().toFixed(3)]) }); }));
+await page.screenshot({ path: 'test/out/dust.png' });
+await browser.close();

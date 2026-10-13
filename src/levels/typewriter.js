@@ -1,13 +1,13 @@
 /* Level 09 - Typewriter: dense mechanical cleaning, ribbon replacement and a typing / carriage-return payoff.
    X = width, Y = up, Z = toward the typist. */
 import * as THREE from 'three';
-import { rbox, cyl, box, torus, mesh, mat, metal, extrude, shape, tube, canvasTex } from '../core/geo.js';
-import { paint, extract, snap, hold, trace, taps, cycle, compare, stage, centered, I, lp, toast } from '../core/systems.js';
-import { G, camImpulse } from '../core/game.js';
-import { sfx } from '../core/audio.js';
-import { glints, puff } from '../core/particles.js';
+import { rbox, cyl, box, torus, mesh, mat, metal, extrude, shape, tube, canvasTex } from '../assets/geo.js';
+import { paint, extract, snap, hold, trace, taps, cycle, compare, stage, centered, I, lp, toast } from '../game/systems/index.js';
+import { G, camImpulse } from '../game/game.js';
+import { sfx } from '../fx/audio.js';
+import { glints, puff } from '../fx/particles.js';
 import { smooth, later, tween, lerp } from '../core/util.js';
-import { knurlMat } from '../core/tex.js';
+import { knurlMat } from '../assets/tex.js';
 
 const ROWS = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'], WORD = 'RESTORED', MANUAL = ['Q', 'P', 'A', 'L', 'M'];
 const kpos = (i, j) => [-3.0 + j * .25 + i * .64, .78 + (2 - j) * .3, 2.35 - (2 - j) * .5];

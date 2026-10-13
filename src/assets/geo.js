@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
-import { TAU } from './util.js';
+import { TAU } from '../core/util.js';
 
 /* lathe around Y from [[r,y,hard?],...]; a truthy 3rd element makes a hard edge */
 export function lathe(profile, seg = 24, phiStart = 0, phiLen = TAU) {

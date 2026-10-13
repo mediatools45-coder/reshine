@@ -1,8 +1,8 @@
 /* Level 02 - Pocket Knife: wood-handle restoration plus a folding pivot clean-up */
 import * as THREE from 'three';
-import { rbox, cyl, box, mesh, mat, metal, lump, extrude, shape } from '../core/geo.js';
-import { paint, pick, extract, screws, snap, hold, bath, cycle, compare, stage, chunksOn, I, lp, toast } from '../core/systems.js';
-import { G, turnItem } from '../core/game.js';
+import { rbox, cyl, box, mesh, mat, metal, lump, extrude, shape } from '../assets/geo.js';
+import { paint, pick, extract, screws, snap, hold, bath, cycle, compare, stage, chunksOn, I, lp, toast } from '../game/systems/index.js';
+import { G, turnItem } from '../game/game.js';
 import { smooth, later } from '../core/util.js';
 
 const HL = 4.2, HH = .86, PX = 1.85, PY = .06;

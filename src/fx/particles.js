@@ -1,7 +1,7 @@
 /* CPU particle system rendered as two THREE.Points batches (alpha + additive).
    types: 0 puff, 1 bubble, 2 glint, 3 chip/flake, 4 round grain, 5 spark streak */
 import * as THREE from 'three';
-import { rnd } from './util.js';
+import { rnd } from '../core/util.js';
 
 const VS = `attribute vec4 aCol; attribute vec2 aSzT; uniform float uPx; varying vec4 vCol; varying float vType;
 void main(){ vec4 mv=modelViewMatrix*vec4(position,1.); gl_Position=projectionMatrix*mv; gl_PointSize=max(1.,aSzT.x*uPx/-mv.z); vCol=aCol; vType=aSzT.y; }`;
@@ -58,7 +58,7 @@ export function updateParticles(dt, camera, H) {
     p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
     if (p.floor !== null && p.y < p.floor) {
       p.y = p.floor; const sp = Math.hypot(p.vx, p.vz);
-      if (p.g > 0 && Math.abs(p.vy) < 1.1 && sp < 1.6) { p.rest = true; p.vx = p.vy = p.vz = 0; if (p.type === 3 || p.type === 4) p.life = Math.max(p.life, p.t + (p.liquid ? .4 : 5)); }
+      if (p.g > 0 && Math.abs(p.vy) < 1.1 && sp < 1.6) { p.rest = true; p.vx = p.vy = p.vz = 0; p.life = Math.min(p.life, p.t + (p.liquid ? .35 : 1.4)); p.restT = p.t; }
       else { p.vy *= -.34; p.vx *= .6; p.vz *= .6; }
     }
   }
@@ -72,7 +72,7 @@ export function updateParticles(dt, camera, H) {
       const j = p.type === 4 ? 1 : 0, im = P.solids[j]; if (sc[j] >= P.smax) continue;
       if (p.rx == null) { p.rx = Math.random() * 6; p.ry = Math.random() * 6; p.rz = Math.random() * 6; p.wx = rnd(-14, 14); p.wy = rnd(-10, 10); p.lc0 = lin(p.c); }
       if (!p.rest) { p.rx += p.wx * .016; p.ry += p.wy * .016; } else if (p.type === 3 && !p.flat) { p.flat = 1; p.rx = rnd(-.15, .15); p.rz = rnd(-.15, .15); }
-      const sz = (p.s0 + (p.s1 - p.s0) * k) * .55 * (k > .82 ? Math.max(0, (1 - k) / .18) : 1);
+      const sz = (p.s0 + (p.s1 - p.s0) * k) * .55 * (p.rest ? Math.max(0, 1 - (p.t - p.restT) / Math.max(.01, p.life - p.restT)) : k > .82 ? Math.max(0, (1 - k) / .18) : 1);
       _q.setFromEuler(_e.set(p.rx, p.ry, p.rz || 0)); _p.set(p.x, p.y + (p.rest ? sz * .3 : 0), p.z); _s.set(sz, sz, sz); _m.compose(_p, _q, _s);
       im.setMatrixAt(sc[j], _m); im.instanceColor.setXYZ(sc[j], p.lc0.r, p.lc0.g, p.lc0.b); sc[j]++; continue;
     } const a = p.a * (p.fade === 1 ? Math.min(1, k * 6) * (1 - k) : p.fade === 2 ? Math.min(1, (1 - k) * 4) : (1 - k));
@@ -102,4 +102,4 @@ export function foam(p, n, s = 1) { p = A(p); for (let i = 0; i < n; i++) emit({
 export function glints(p, n, spread = .3) { p = A(p); for (let i = 0; i < n; i++) emit({ x: p[0] + rnd(-spread, spread), y: p[1] + rnd(0, .25), z: p[2] + rnd(-spread, spread), vx: 0, vy: rnd(.1, .5), vz: 0, g: 0, life: rnd(.5, 1.1), s0: rnd(.12, .3), s1: .02, c: [1, .95, .75], a: 1, type: 2, add: true, fade: 1, floor: null }); }
 export function drops(p, n, col = [.7, .88, 1]) { p = A(p); for (let i = 0; i < n; i++) emit({ x: p[0] + rnd(-.05, .05), y: p[1], z: p[2] + rnd(-.05, .05), vx: rnd(-.6, .6), vy: rnd(-.2, 1.2), vz: rnd(-.6, .6), g: 8, drag: .2, life: rnd(.8, 1.4), s0: rnd(.035, .06), s1: .03, c: col, a: .85, type: 4, liquid: true }); }
 export function confetti(p, n) { p = A(p); const cols = [[.95, .72, .29], [.9, .4, .22], [.44, .88, .69], [.5, .8, .95]]; for (let i = 0; i < n; i++) emit({ x: p[0] + rnd(-2, 2), y: p[1] + rnd(0, 1), z: p[2] + rnd(-2, 2), vx: rnd(-1.5, 1.5), vy: rnd(2, 5), vz: rnd(-1.5, 1.5), g: 5, drag: .6, life: rnd(1.4, 2.8), s0: rnd(.08, .14), s1: .06, c: cols[i % 4], a: 1, type: 3 }); }
-export function dust(p, n, col = [.75, .72, .66], s = 1) { puff(p, col, n, { a: .35, s0: .12 * s, s1: .4 * s, life: 1.3 }); }
+export function dust(p, n, col = [.75, .72, .66], s = 1) { puff(p, col, n, { a: .28, s0: .1 * s, s1: .32 * s, life: .8 }); }

@@ -2,10 +2,10 @@
    The controller glides the tool to the touched surface and tilts it toward the player. */
 import * as THREE from 'three';
 import { lathe, cyl, box, rbox, sphere, torus, tube, mesh, metal, plastic, rubber, mat, glass } from './geo.js';
-import { R } from './engine.js';
-import { setLoop } from './audio.js';
-import { emit } from './particles.js';
-import { rnd, clamp, rng } from './util.js';
+import { R } from '../render/engine.js';
+import { setLoop } from '../fx/audio.js';
+import { emit } from '../fx/particles.js';
+import { rnd, clamp, rng } from '../core/util.js';
 import { woodMat, steelMat, knurlMat, gritMat, clothMat, spongeMat, fileMat, labelMat } from './tex.js';
 
 const woodM = (c = '#9b6a3c') => woodMat(c);

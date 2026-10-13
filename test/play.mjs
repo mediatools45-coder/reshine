@@ -6,7 +6,7 @@ const args = process.argv.slice(2), only = args.filter(a => !a.startsWith('--'))
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: 400, height: 780 }, deviceScaleFactor: 1 });
 const errs = []; page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|ERR_TUNNEL|net::/.test(m.text())) errs.push(m.text()); }); page.on('pageerror', e => errs.push('PAGEERROR ' + e.message));
-await page.goto('file://' + process.cwd() + '/dist/index.html?lowq=1');
+await page.goto('file://' + process.cwd() + '/' + (process.env.HTML || 'dist/index.html') + '?lowq=1');
 await page.waitForFunction(() => window.__g && !document.getElementById('load').classList.contains('on'), null, { timeout: 180000 });
 const W = (f, a) => page.evaluate(f, a), M = page.mouse, sleep = ms => page.waitForTimeout(ms);
 await W(() => { window.__g.G.dtCap = .5; localStorage.setItem('rw_tips', '0'); });

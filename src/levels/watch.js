@@ -1,12 +1,12 @@
 /* Level 05 - Watch: precision disassembly and careful visual reassembly */
 import * as THREE from 'three';
-import { lathe, cyl, box, rbox, torus, mesh, mat, metal, extrude, canvasTex, sphere, merge, xf } from '../core/geo.js';
-import { paint, extract, snap, rotate, taps, compare, stage, centered, I, lp } from '../core/systems.js';
-import { G, turnItem, faceFront } from '../core/game.js';
-import { sfx } from '../core/audio.js';
-import { glints } from '../core/particles.js';
+import { lathe, cyl, box, rbox, torus, mesh, mat, metal, extrude, canvasTex, sphere, merge, xf } from '../assets/geo.js';
+import { paint, extract, snap, rotate, taps, compare, stage, centered, I, lp } from '../game/systems/index.js';
+import { G, turnItem, faceFront } from '../game/game.js';
+import { sfx } from '../fx/audio.js';
+import { glints } from '../fx/particles.js';
 import { smooth, later, clamp } from '../core/util.js';
-import { knurlMat, steelMat } from '../core/tex.js';
+import { knurlMat, steelMat } from '../assets/tex.js';
 
 const CR = 1.58, DR = 1.24, HANDS = { hour: { a: 2.05, z: .215 }, minute: { a: .52, z: .235 }, second: { a: -1.2, z: .255 } };
 function dialTex() {

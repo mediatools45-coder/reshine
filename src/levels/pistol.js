@@ -1,11 +1,11 @@
 /* Level 10 - Antique Pistol Restoration: extreme corrosion recovery and cosmetic reconstruction of a display piece.
    Cosmetic only: no functional repair of firing mechanisms. Barrel along +X, side plate faces +Z. */
 import * as THREE from 'three';
-import { lathe, cyl, box, rbox, torus, mesh, mat, metal, extrude, shape, tube, lump, sphere } from '../core/geo.js';
-import { paint, pick, hold, trace, bath, snap, taps, compare, stage, chunksOn, centered, I, lp } from '../core/systems.js';
-import { G, camImpulse } from '../core/game.js';
-import { sfx } from '../core/audio.js';
-import { sparks, glints, puff } from '../core/particles.js';
+import { lathe, cyl, box, rbox, torus, mesh, mat, metal, extrude, shape, tube, lump, sphere } from '../assets/geo.js';
+import { paint, pick, hold, trace, bath, snap, taps, compare, stage, chunksOn, centered, I, lp } from '../game/systems/index.js';
+import { G, camImpulse } from '../game/game.js';
+import { sfx } from '../fx/audio.js';
+import { sparks, glints, puff } from '../fx/particles.js';
 import { smooth, later, tween, rnd } from '../core/util.js';
 
 function barrelGeom() { const g = new THREE.CylinderGeometry(.2, .26, 4.6, 8, 40, false); g.rotateZ(-Math.PI / 2); g.translate(2.3, 0, 0); g.userData.base = g.attributes.position.array.slice(); return g; }

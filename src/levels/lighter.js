@@ -1,12 +1,12 @@
 /* Level 04 - Vintage Lighter: small-part disassembly, chemical cleaning, fresh cotton and reassembly (ported from v12, 29 steps) */
 import * as THREE from 'three';
-import { rbox, cyl, box, mesh, mat, metal, lump, lathe, canvasTex } from '../core/geo.js';
-import { paint, pick, extract, screws, snap, hold, bath, taps, cycle, compare, stage, centered, I, lp, toast } from '../core/systems.js';
-import { G, camImpulse } from '../core/game.js';
-import { sfx } from '../core/audio.js';
-import { sparks, puff, flakes, glints } from '../core/particles.js';
+import { rbox, cyl, box, mesh, mat, metal, lump, lathe, canvasTex } from '../assets/geo.js';
+import { paint, pick, extract, screws, snap, hold, bath, taps, cycle, compare, stage, centered, I, lp, toast } from '../game/systems/index.js';
+import { G, camImpulse } from '../game/game.js';
+import { sfx } from '../fx/audio.js';
+import { sparks, puff, flakes, glints } from '../fx/particles.js';
 import { smooth, later, tween, lerp, clamp } from '../core/util.js';
-import { STREAM_COL } from '../core/tools.js';
+import { STREAM_COL } from '../assets/tools.js';
 
 const W = 4.2, D = 1.55, Hc = 4.4, Hl = 2.2, tw = 3.8, td = 1.25, th = 4.0, chH = 1.7, chY = th / 2 + chH / 2 - .05;
 const PB = -.1 - th / 2 - .09, LID_OPEN = -1.75;

@@ -1,11 +1,11 @@
 /* Level 06 - Old PC Keyboard: keycap removal, deep debris cleaning and beige plastic restoration.
    Built lying in the XY plane with key tops facing +Z. */
 import * as THREE from 'three';
-import { rbox, cyl, box, mesh, mat, metal, extrude, roundRectShape, lump, tube, canvasTex } from '../core/geo.js';
-import { paint, extract, screws, snap, hold, bath, taps, compare, stage, centered, I, lp, toast } from '../core/systems.js';
-import { G, camImpulse } from '../core/game.js';
-import { sfx } from '../core/audio.js';
-import { glints, puff, dust } from '../core/particles.js';
+import { rbox, cyl, box, mesh, mat, metal, extrude, roundRectShape, lump, tube, canvasTex } from '../assets/geo.js';
+import { paint, extract, screws, snap, hold, bath, taps, compare, stage, centered, I, lp, toast } from '../game/systems/index.js';
+import { G, camImpulse } from '../game/game.js';
+import { sfx } from '../fx/audio.js';
+import { glints, puff, dust } from '../fx/particles.js';
 import { smooth, later, tween, rnd, lerp, clamp } from '../core/util.js';
 
 const ROWS = ['1234567890-=', 'QWERTYUIOP[]', "ASDFGHJKL;'", 'ZXCVBNM,./'], KS = .66, KW = .6;

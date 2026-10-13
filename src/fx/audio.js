@@ -1,5 +1,5 @@
 /* synthesized audio: one-shots (SFX), tool loops, musical payoffs */
-import { rnd } from './util.js';
+import { rnd } from '../core/util.js';
 
 let AC = null, MASTER = null, NBUF = null;
 export const AU = { on: true };

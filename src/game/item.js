@@ -1,9 +1,9 @@
 /* a restorable object: parts (groups of meshes), surfaces (mask materials), tray, ghosts */
 import * as THREE from 'three';
-import { Surface } from './surface.js';
-import { mesh, sphere } from './geo.js';
-import { moveTo, clock, rng } from './util.js';
-import { R } from './engine.js';
+import { Surface } from '../surface/surface.js';
+import { mesh, sphere } from '../assets/geo.js';
+import { moveTo, clock, rng } from '../core/util.js';
+import { R } from '../render/engine.js';
 
 const HIDE_MAT = new THREE.MeshBasicMaterial({ visible: false });
 export const GHOST_MAT = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.6, 1.1, .35), transparent: true, opacity: .32, depthWrite: false, toneMapped: false });

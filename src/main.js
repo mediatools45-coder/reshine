@@ -1,11 +1,12 @@
 import * as THREE from 'three';
-import { R, initEngine, resize, render, setQuality, project } from './core/engine.js';
-import { buildWorld } from './core/world.js';
-import { initParticles, updateParticles, confetti, glints, clearParticles } from './core/particles.js';
-import { initTools, setTool, T, makeTool } from './core/tools.js';
-import { G, RIG, CAM, HOOK, loadLevel, enterStep, ff, skipStep, finishStep, updateGame, bindInput, setView, resetView, st, resetPointers } from './core/game.js';
-import { UI, bindUI, updateUI, refreshUI, toast, endGuide, hideCoach } from './core/ui.js';
-import { sfx, setLoop, ac, AU } from './core/audio.js';
+import { R, initEngine, resize, render, setQuality, project } from './render/engine.js';
+import { buildStudio } from './render/studio.js';
+import { initParticles, updateParticles, confetti, glints, clearParticles, P } from './fx/particles.js';
+import { initTools, setTool, T, makeTool } from './assets/tools.js';
+import { G, RIG, CAM, HOOK, loadLevel, enterStep, ff, skipStep, finishStep, updateGame, setView, resetView, st } from './game/game.js';
+import { bindControls, resetPointers } from './input/controls.js';
+import { bindUI, updateUI, toast, endGuide } from './ui/hud.js';
+import { sfx, setLoop, ac, AU } from './fx/audio.js';
 import { tickTweens, clock, cancelAll, later, $, store, vib } from './core/util.js';
 import { LEVELS, UPCOMING } from './levels/index.js';
 
@@ -13,6 +14,7 @@ const SAVE_KEY = 'rw_save_v1';
 const save = store.json(SAVE_KEY, {});
 const persist = () => store.setJson(SAVE_KEY, save);
 const qs = new URLSearchParams(location.search);
+let tickKeys = () => { };
 let qCap = +(store.get('rw_q') ?? 3), dprCap = 2, lastTs = 0, slow = 0, frames = 0;
 
 function boot() {
@@ -21,20 +23,20 @@ function boot() {
   if (!ok) { $('nogl').style.display = 'flex'; $('load').classList.remove('on'); return; }
   if (qs.get('lowq')) qCap = 0;
   applyQuality(qCap);
-  buildWorld(R.scene); initParticles(R.scene); initTools(R.scene);
+  buildStudio(R.scene); initParticles(R.scene); initTools(R.scene);
   addEventListener('resize', () => resize(dprCap)); addEventListener('orientationchange', () => setTimeout(() => resize(dprCap), 200));
   G.autoTurn = store.get('rw_auto') !== '0'; AU.on = store.get('rw_snd') !== '0';
   $('mAuto').textContent = 'Auto turn: ' + (G.autoTurn ? 'on' : 'off'); $('mSnd').textContent = 'Sound: ' + (AU.on ? 'on' : 'off');
-  bindInput(cv);
+  tickKeys = bindControls(cv);
   bindUI({ menu: openMenu, closeMenu, shop: toShop, restart: () => startLevel(G.level, 0), cycleQuality, progress: n => { if (G.level && n < G.steps.length) { const s = save[G.level.id] || (save[G.level.id] = {}); s.step = n; s.pct = Math.max(s.pct || 0, Math.round(n / G.steps.length * 100)); persist(); } } });
   HOOK.complete = complete;
   $('inBack').onclick = () => { sfx('click'); toShop(); };
   $('inStart').onclick = () => { sfx('click'); ac(); startLevel(G.level, 0); };
   $('inCont').onclick = () => { sfx('click'); ac(); startLevel(G.level, (save[G.level.id] || {}).step || 0); };
   $('btnShop').onclick = () => { sfx('click'); toShop(); };
-  $('btnLook').onclick = () => { $('done').classList.remove('on'); toast('Drag to rotate · pinch to zoom', 2400); };
+  $('btnLook').onclick = () => { $('done').classList.remove('on'); toast('Drag to spin · two fingers to move · pinch to zoom', 2600); };
   document.addEventListener('visibilitychange', () => { if (document.hidden && G.mode === 'play') openMenu(); });
-  window.__g = { gallery, auto, G, RIG, CAM, T, R, LEVELS, openLevel, startLevel, ff, skipStep, finishStep, enterStep, st, save, setQuality: applyQuality, toShop, clock, setView };
+  window.__g = { P, gallery, auto, G, RIG, CAM, T, R, LEVELS, openLevel, startLevel, ff, skipStep, finishStep, enterStep, st, save, setQuality: applyQuality, toShop, clock, setView };
   resize(dprCap);
   requestAnimationFrame(frame);
   makeThumbs().then(() => { $('load').classList.remove('on'); buildShop(); G.mode = 'shop'; if (qs.get('level')) openLevel(qs.get('level')); });
@@ -82,7 +84,7 @@ function buildShop() {
   const done = LEVELS.filter(d => (save[d.id] || {}).restored).length; $('shopSub').textContent = done ? `${done} of ${list.length} relics restored` : 'Pick any relic to bring back to life';
 }
 function toShop() {
-  endGuide(); hideCoach(); cancelAll(); setLoop(null); resetPointers();
+  endGuide(); cancelAll(); setLoop(null); resetPointers();
   G.mode = 'shop'; document.body.className = 'shop'; $('done').classList.remove('on'); $('intro').classList.remove('on'); $('shop').classList.add('on'); $('cmp').classList.add('hide');
   R.cmp = null; setTool(null); buildShop(); if (G.item) { RIG.spin = .25; setView({ preset: 'show' }); }
 }
@@ -98,17 +100,17 @@ function openLevel(id) {
 function startLevel(def, from = 0) {
   if (G.mode !== 'intro' || G.level !== def) loadLevel(def);
   $('intro').classList.remove('on'); $('shop').classList.remove('on'); $('done').classList.remove('on'); document.body.className = 'play';
-  G.mode = 'play'; G.coins = from * 25; G.t0 = G.time; RIG.spin = 0; resetView();
+  G.mode = 'play'; G.t0 = G.time; RIG.spin = 0; resetView();
   if (from > 0) ff(from); else enterStep(0);
 }
 function complete() {
   G.mode = 'done'; G.step = G.steps.length; setTool(null); setLoop(null); endGuide(); document.body.className = 'done'; R.cmp = null; $('cmp').classList.add('hide');
-  G.coins += 250; sfx('win'); vib([40, 60, 40]); resetView(); setView({ preset: 'show' }); RIG.spin = .35;
+  sfx('win'); vib([40, 60, 40]); resetView(); setView({ preset: 'show' }); RIG.spin = .35;
   for (let i = 0; i < 10; i++) later(i * 150, () => confetti(new THREE.Vector3(CAM.t.x, CAM.t.y + 2, CAM.t.z), 18));
   const s = save[G.level.id] || (save[G.level.id] = {}); s.restored = true; s.pct = 100; s.step = 0; s.time = Math.round(G.time - (G.t0 || 0)); persist();
   later(900, () => { try { const url = snapshot(G.level, true); store.set('rw_thumb_' + G.level.id, url); } catch (e) { console.error(e); } });
   $('doneSub').textContent = G.level.outro || 'From a neglected relic to a showroom piece.'; $('dSteps').textContent = G.steps.length + '/' + G.steps.length;
-  const t = s.time; $('dTime').textContent = Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); $('dCoins').textContent = G.coins;
+  const t = s.time; $('dTime').textContent = Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
   later(1500, () => { if (G.mode === 'done') $('done').classList.add('on'); });
 }
 function openMenu() { if (G.mode !== 'play') return; G.paused = true; $('menuSub').textContent = G.level.name + ' · Step ' + (G.step + 1) + ' of ' + G.steps.length; $('menu').classList.add('on'); }
@@ -143,7 +145,7 @@ function frame(ts) {
   requestAnimationFrame(frame);
   let dt = Math.min(G.dtCap || .05, (ts - lastTs) / 1000 || .016); lastTs = ts; if (G.paused) dt = 0;
   if (dt > 0 && !qs.get('lowq') && !qs.get('noadapt')) { frames++; slow = slow * .97 + (dt > .034 ? 1 : 0) * .03; if (frames > 90 && slow > .55 && qCap > 0) { applyQuality(qCap - 1); slow = 0; frames = 0; } }
-  G.time += dt; tickTweens(dt);
+  G.time += dt; tickTweens(dt); tickKeys(dt);
   updateGame(dt);
   const s = st();
   if (G.mode === 'play' && s && s.compare && G.before) { R.cmp = { x: G.cmp, before: b => { G.before.root.visible = b; G.item.root.visible = !b; } }; }

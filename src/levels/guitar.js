@@ -1,13 +1,13 @@
 /* Level 08 - Acoustic Guitar: large wood restoration, string replacement and an audible strum. Top faces +Z, neck along +Y. */
 import * as THREE from 'three';
-import { rbox, cyl, box, torus, mesh, mat, metal, extrude, tube, lump, sphere } from '../core/geo.js';
-import { paint, screws, snap, hold, trace, taps, rotate, compare, stage, centered, I, lp, toast } from '../core/systems.js';
-import { G, finishStep, camImpulse, st } from '../core/game.js';
-import { R, project } from '../core/engine.js';
-import { sfx, tone } from '../core/audio.js';
-import { glints, dust, puff } from '../core/particles.js';
+import { rbox, cyl, box, torus, mesh, mat, metal, extrude, tube, lump, sphere } from '../assets/geo.js';
+import { paint, screws, snap, hold, trace, taps, rotate, compare, stage, centered, I, lp, toast } from '../game/systems/index.js';
+import { G, finishStep, camImpulse, st } from '../game/game.js';
+import { R, project } from '../render/engine.js';
+import { sfx, tone } from '../fx/audio.js';
+import { glints, dust, puff } from '../fx/particles.js';
 import { smooth, later, tween, clamp } from '../core/util.js';
-import { knurlMat } from '../core/tex.js';
+import { knurlMat } from '../assets/tex.js';
 
 const TOPZ = .5, NUTY = 7.0, BRY = -1.6, SZ = .78;
 const sx = (i, y) => { const t = (y - BRY) / (NUTY - BRY); return (i - 2.5) * (.2 * (1 - t) + .12 * t); };

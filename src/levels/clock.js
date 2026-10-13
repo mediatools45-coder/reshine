@@ -1,12 +1,12 @@
 /* Level 07 - Twin-Bell Alarm Clock: glass, hands, bells, gears and a ticking + ringing payoff. Face toward +Z. */
 import * as THREE from 'three';
-import { lathe, cyl, box, rbox, torus, mesh, mat, metal, extrude, canvasTex, sphere, tube } from '../core/geo.js';
-import { paint, extract, screws, snap, taps, bath, rotate, compare, stage, centered, I, lp } from '../core/systems.js';
-import { G, camImpulse } from '../core/game.js';
-import { sfx } from '../core/audio.js';
-import { glints, sparks } from '../core/particles.js';
+import { lathe, cyl, box, rbox, torus, mesh, mat, metal, extrude, canvasTex, sphere, tube } from '../assets/geo.js';
+import { paint, extract, screws, snap, taps, bath, rotate, compare, stage, centered, I, lp } from '../game/systems/index.js';
+import { G, camImpulse } from '../game/game.js';
+import { sfx } from '../fx/audio.js';
+import { glints, sparks } from '../fx/particles.js';
 import { smooth, later, tween } from '../core/util.js';
-import { knurlMat } from '../core/tex.js';
+import { knurlMat } from '../assets/tex.js';
 
 const R0 = 2.1, DEP = 1.4, HANDS = { hour: { a: -.9, z: .5, len: 1.05, w: .1 }, minute: { a: 2.6, z: .54, len: 1.55, w: .07 }, alarm: { a: 1.4, z: .46, len: .9, w: .05 } };
 function faceTex() {

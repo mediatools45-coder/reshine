@@ -1,10 +1,10 @@
 /* Level 03 - Sword: large-scale corrosion removal and a dramatic polished blade reveal (ported from v12, 16 steps) */
 import * as THREE from 'three';
-import { lathe, cyl, box, mesh, mat, metal, lump } from '../core/geo.js';
-import { paint, pick, extract, snap, hold, bath, taps, inspect, compare, stage, chunksOn, I, lp, toast } from '../core/systems.js';
-import { G, RIG, camImpulse } from '../core/game.js';
-import { sfx } from '../core/audio.js';
-import { sparks, puff, flakes, glints } from '../core/particles.js';
+import { lathe, cyl, box, mesh, mat, metal, lump } from '../assets/geo.js';
+import { paint, pick, extract, snap, hold, bath, taps, inspect, compare, stage, chunksOn, I, lp, toast } from '../game/systems/index.js';
+import { G, RIG, camImpulse } from '../game/game.js';
+import { sfx } from '../fx/audio.js';
+import { sparks, puff, flakes, glints } from '../fx/particles.js';
 import { smooth, lerp, clamp, later, tween } from '../core/util.js';
 
 const BL = { x0: .1, L: 7.3, hwRoot: .46, hwMid: .42, T: .085, NU: 24, NV: 150 };

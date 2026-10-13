@@ -1,8 +1,8 @@
 /* Level 01 - Padlock: freeing a seized mechanism and polishing a compact brass lock */
 import * as THREE from 'three';
-import { rbox, cyl, tube, mesh, mat, metal, box, lump, sphere } from '../core/geo.js';
-import { paint, pick, extract, screws, snap, inspect, bath, cycle, compare, stage, chunksOn, I, lp } from '../core/systems.js';
-import { G } from '../core/game.js';
+import { rbox, cyl, tube, mesh, mat, metal, box, lump, sphere } from '../assets/geo.js';
+import { paint, pick, extract, screws, snap, inspect, bath, cycle, compare, stage, chunksOn, I, lp } from '../game/systems/index.js';
+import { G } from '../game/game.js';
 import { clamp, smooth } from '../core/util.js';
 
 const BW = 3, BH = 2.6, BD = 1.2, LEG = .85, SR = .19;

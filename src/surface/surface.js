@@ -5,7 +5,7 @@
    mask A: r rust, g crust, b dirt/grime/yellowing, a wet
    mask B: r residue (black film), g sanded, b polished, a finish (paint, stain, oil, compound) */
 import * as THREE from 'three';
-import { clamp, rng } from './util.js';
+import { clamp, rng } from '../core/util.js';
 
 export const LAYERS = { rust: [0, 0], crust: [0, 1], dirt: [0, 2], wet: [0, 3], residue: [1, 0], sand: [1, 1], polish: [1, 2], finish: [1, 3] };
 const AX = [[0, 1], [0, -1], [1, 1], [1, -1], [2, 1], [2, -1]]; /* cell -> axis, sign */
@@ -24,15 +24,15 @@ function weights(nx, ny, nz) {
   return [[nx > 0 ? 0 : 1, wx], [ny > 0 ? 2 : 3, wy], [nz > 0 ? 4 : 5, wz]];
 }
 
-const VERT_PARS = `uniform mat4 uMaskMat; varying vec3 vMP; varying vec3 vMN;`;
+const VERT_PARS = `uniform mat4 uMaskMat; varying vec3 vMP; varying vec3 vMN; varying vec3 sAxX; varying vec3 sAxY; varying vec3 sAxZ;`;
 const FRAG_PARS = `
 uniform sampler2D uMA; uniform sampler2D uMB; uniform vec3 uBMin; uniform vec3 uBSize; uniform vec4 uAtlas; uniform float uPad;
 uniform float uKind; uniform vec3 uBase; uniform vec2 uBaseRM; uniform float uScratch; uniform float uNS; uniform float uSeed;
 uniform vec3 uDirtC; uniform vec2 uDirtRO; uniform vec3 uRust1; uniform vec3 uRust2; uniform vec3 uCrustC;
 uniform vec3 uSandC; uniform float uSandR; uniform vec3 uPolC; uniform float uPolR;
 uniform vec3 uFinC; uniform vec4 uFinP; uniform float uWetG; uniform vec3 uGrainAx; uniform float uGrainS; uniform vec3 uGlow; uniform float uBump; uniform float uResG;
-uniform vec3 uWood2; uniform float uUseMap;
-varying vec3 vMP; varying vec3 vMN;
+uniform vec3 uWood2; uniform float uUseMap; uniform sampler2D uNrmR; uniform sampler2D uNrmC;
+varying vec3 vMP; varying vec3 vMN; varying vec3 sAxX; varying vec3 sAxY; varying vec3 sAxZ; float sNk=0., sNkC=0.;
 vec3 sG3(vec3 p){ p=vec3(dot(p,vec3(127.1,311.7,74.7)),dot(p,vec3(269.5,183.3,246.1)),dot(p,vec3(113.5,271.9,124.6))); return -1.+2.*fract(sin(p)*43758.5453); }
 float sNoise(vec3 p){ vec3 i=floor(p), f=fract(p); vec3 u=f*f*f*(f*(f*6.-15.)+10.);
   float n=mix(mix(mix(dot(sG3(i),f),dot(sG3(i+vec3(1,0,0)),f-vec3(1,0,0)),u.x),mix(dot(sG3(i+vec3(0,1,0)),f-vec3(0,1,0)),dot(sG3(i+vec3(1,1,0)),f-vec3(1,1,0)),u.x),u.y),
@@ -45,20 +45,20 @@ float sMk(float m,float n){ return smoothstep(.22,.62,m*(.62+.76*n)); }
 `;
 const FRAG_COLOR = `
 vec4 sA=vec4(0.), sB=vec4(0.);
+vec3 sP=vMP*uNS+uSeed;
+float nL=sFbm(sP*.55), nM=sFbm(sP*2.2+3.7), nH=sNoise(sP*11.);
 {
-  vec3 q=clamp((vMP-uBMin)/uBSize,0.,1.); vec3 n=normalize(vMN); vec3 w=pow(abs(n),vec3(4.)); w/=(w.x+w.y+w.z+1e-5); vec2 t;
+  vec3 q=clamp((vMP-uBMin)/uBSize+(vec3(nM,nH,nL)-.5)*(2.2/uAtlas.z),0.,1.); vec3 n=normalize(vMN); vec3 w=pow(abs(n),vec3(4.)); w/=(w.x+w.y+w.z+1e-5); vec2 t;
   if(w.x>.01){ t = n.x>0. ? sCell(0.,vec2(1.-q.z,q.y)) : sCell(1.,vec2(q.z,q.y)); sA+=texture(uMA,t)*w.x; sB+=texture(uMB,t)*w.x; }
   if(w.y>.01){ t = n.y>0. ? sCell(2.,vec2(q.x,1.-q.z)) : sCell(3.,vec2(q.x,q.z)); sA+=texture(uMA,t)*w.y; sB+=texture(uMB,t)*w.y; }
   if(w.z>.01){ t = n.z>0. ? sCell(4.,vec2(q.x,q.y)) : sCell(5.,vec2(1.-q.x,q.y)); sA+=texture(uMA,t)*w.z; sB+=texture(uMB,t)*w.z; }
 }
-vec3 sP=vMP*uNS+uSeed;
-float nL=sFbm(sP*.55), nM=sFbm(sP*2.2+3.7), nH=sNoise(sP*11.);
 vec3 sCol=uUseMap>.5?diffuseColor.rgb:uBase; float sR=uBaseRM.x, sM=uBaseRM.y, sCC=0.; vec2 sGr=vec2(0.);
 vec2 dL=vec2(dFdx(nL),dFdy(nL)), dM=vec2(dFdx(nM),dFdy(nM)), dHh=vec2(dFdx(nH),dFdy(nH));
 if(uKind<.5){
   sCol*= .8+.4*nL;
   float scrN=smoothstep(.74,.96,sNoise(sP*vec3(9.,.7,9.)+nL)), scrW=(1.-sB.g)*uScratch, scr=scrN*scrW; sCol*=1.-.35*scr; sR=mix(sR,.7,scr); sGr-=vec2(dFdx(scrN),dFdy(scrN))*scrW*.25;
-  float pitN=smoothstep(.78,.93,sFbm(sP*4.6+9.1)), pit=pitN*scrW; sCol*=1.-.45*pit; sGr-=vec2(dFdx(pitN),dFdy(pitN))*scrW*.6;
+  float pitN=smoothstep(.78,.93,sFbm(sP*4.6+9.1)), pit=pitN*scrW; sCol*=1.-.45*pit; sNk=max(sNk,(.12+.5*pit)*scrW); sGr-=vec2(dFdx(pitN),dFdy(pitN))*scrW*.6;
   float sd=smoothstep(.02,.8,sB.g); sCol=mix(sCol,uSandC*(.9+.14*nH+.06*sNoise(sP*vec3(14.,1.,14.))),sd); sR=mix(sR,uSandR,sd); sM=mix(sM,1.,sd*.8);
   float pol=smoothstep(.0,.85,sB.b*(1.+(nH-.5)*.35)); sCol=mix(sCol,uPolC,pol); sR=mix(sR,uPolR,pol); sM=mix(sM,1.,pol);
 } else if(uKind<1.5){
@@ -80,19 +80,44 @@ if(uKind<.5||uKind>1.5){
 }
 float sRes=max(sMk(sB.r,nM),uResG*smoothstep(.1,.9,max(sA.r,sA.g)+.35)*(.75+.25*nM)); sCol=mix(sCol,vec3(.018,.017,.016)*(.7+.6*nH),sRes); sR=mix(sR,.88,sRes); sM=mix(sM,.15,sRes);
 float sDt=sMk(sB.r*0.+sA.b,nL)*uDirtRO.y; vec3 dC=uDirtC*(.8+.35*nM); sCol=mix(sCol,dC,sDt); sR=mix(sR,uDirtRO.x,sDt); sM=mix(sM,sM*.25,sDt); 
-float sCr=sMk(sA.g,nM); vec3 crC=uCrustC*(.55+.9*nH)*(.8+.3*nL); sCol=mix(sCol,crC,sCr); sR=mix(sR,1.,sCr); sM=mix(sM,0.,sCr); sGr+=sCr*(dM*1.1+dHh*.25);
-float sRu=sMk(sA.r,nM); float rv=smoothstep(.25,.75,nM*.7+nH*.5), och=smoothstep(.55,.8,sFbm(sP*.9+20.));
-vec3 ruC=mix(mix(uRust1,uRust2,rv),uRust2*vec3(1.1,1.25,1.1),och*.5)*(.55+.7*nL)*(1.-.25*smoothstep(.62,.82,sFbm(sP*6.3+11.)));
-sCol=mix(sCol,ruC,sRu); sR=mix(sR,1.,sRu); sM=mix(sM,0.,sRu); sGr+=sRu*(dM*1.3+dL*.7+dHh*.25);
+float sCr=sMk(sA.g,nM); vec3 crC=uCrustC*(.55+.7*nH)*(.75+.35*nL)*(.85+.3*smoothstep(.4,.8,sFbm(sP*4.+2.))); sCol=mix(sCol,crC,sCr); sR=mix(sR,1.,sCr); sM=mix(sM,0.,sCr); sGr+=sCr*(dM*.6+dHh*.2); sNkC=sCr;
+/* rust: thin oxide film tints the metal first, then layered dark-brown / red-brown scale with sparse orange */
+float rA=sA.r*(.55+.9*nM);
+float thin=smoothstep(.04,.42,rA), heavy=smoothstep(.3,.82,rA);
+vec3 film=mix(sCol*vec3(.5,.34,.24),uRust1*1.6,.45)*(.8+.35*nL);
+vec3 r1=uRust1*(.55+.5*nH), r2=uRust2*.42, r3=uRust2*vec3(1.,.8,.6)*.78;
+float v1=sFbm(sP*3.1+5.), acc=smoothstep(.6,.86,sFbm(sP*1.7+13.))*(1.-.6*smoothstep(.5,.9,nH));
+vec3 ruC=mix(r1,r2,smoothstep(.28,.72,v1)); ruC=mix(ruC,r3,acc*.65); ruC*=.74+.52*nH; ruC=mix(ruC,vec3(dot(ruC,vec3(.3,.59,.11))),.12);
+sCol=mix(sCol,film,thin*(1.-heavy)); sR=mix(sR,.8,thin); sM=mix(sM,sM*.15,thin);
+sCol=mix(sCol,ruC,heavy); sR=mix(sR,.93+.07*nH,heavy); sM=mix(sM,0.,heavy); sGr+=heavy*(dM*.5+dHh*.15);
+sNk=max(sNk,thin*.45+heavy*1.);
 float sWet=max(sA.a,uWetG); sCol*=1.-.32*sWet; sR*=1.-.7*sWet; sCC=max(sCC,sWet*.9);
 diffuseColor.rgb=sCol;
 `;
 const FRAG_NORMAL = `
-{ vec3 pv=-vViewPosition; vec2 dH=sGr*uBump; vec3 sx=dFdx(pv), sy=dFdy(pv); vec3 R1=cross(sy,normal), R2=cross(normal,sx);
-  float det=dot(sx,R1); vec3 gr=sign(det)*(dH.x*R1+dH.y*R2); normal=normalize(abs(det)*normal-gr); }
+if(sNk+sNkC>.01){
+  /* tri-planar CC0 normal maps in part space (whiteout blend): pitting under rust, cracks in crust */
+  vec3 N=normalize(vMN); vec3 w=pow(abs(N),vec3(4.)); w/=(w.x+w.y+w.z+1e-5); vec3 P=vMP*uNS; vec3 nl=vec3(0.);
+  #define SNRM(uv) ((texture(uNrmR,(uv)*1.6).xy*2.-1.)*sNk*1.5+(texture(uNrmC,(uv)*.85+.3).xy*2.-1.)*sNkC*1.3)
+  if(w.x>.01){ vec2 t=SNRM(P.zy); nl+=vec3(t+N.zy,N.x).zyx*w.x; }
+  if(w.y>.01){ vec2 t=SNRM(P.xz); nl+=vec3(t+N.xz,N.y).xzy*w.y; }
+  if(w.z>.01){ vec2 t=SNRM(P.xy); nl+=vec3(t+N.xy,N.z)*w.z; }
+  nl=normalize(nl); vec3 nv=nl.x*sAxX+nl.y*sAxY+nl.z*sAxZ, gv=N.x*sAxX+N.y*sAxY+N.z*sAxZ;
+  normal=normalize(normal+(nv-gv)*(gl_FrontFacing?1.:-1.));
+}
 `;
 
 let SURF_ID = 0;
+/* CC0 normal maps (@pmndrs/assets, from emmelleppi/normal-maps): 15 = pitted, 24 = cracked crust */
+import pitsUrl from '@pmndrs/assets/normals/0015.webp.js';
+import crackUrl from '@pmndrs/assets/normals/0024.webp.js';
+function nrmTex(url) {
+  const img = new Image(), t = new THREE.Texture(img);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; t.colorSpace = THREE.NoColorSpace;
+  img.onload = () => { t.needsUpdate = true; }; img.src = url;
+  return t;
+}
+export const NRM = { pits: nrmTex(pitsUrl), crack: nrmTex(crackUrl) };
 export class Surface {
   /* o: kind 'metal'|'wood'|'plastic', cell [w,h] texels, look params */
   constructor(name, o = {}) {
@@ -117,7 +142,7 @@ export class Surface {
       uPolC: { value: C(o.pol || '#d6dadf') }, uPolR: { value: o.polR ?? .08 },
       uFinC: { value: C(o.fin || '#6b2a10') }, uFinP: { value: new THREE.Vector4(o.finR ?? .35, o.finM ?? 0, o.finCC ?? .6, 0) },
       uWetG: { value: 0 }, uGrainAx: { value: new THREE.Vector3(...(o.grain || [0, 1, 0])).normalize() }, uGrainS: { value: o.grainS || 1 },
-      uGlow: { value: new THREE.Color(0, 0, 0) }, uBump: { value: o.bump ?? .45 }, uResG: { value: 0 }, uWood2: { value: C(o.wood2 || '#ffd2a0') }, uUseMap: { value: o.map ? 1 : 0 }
+      uGlow: { value: new THREE.Color(0, 0, 0) }, uBump: { value: o.bump ?? .45 }, uResG: { value: 0 }, uNrmR: { value: NRM.pits }, uNrmC: { value: NRM.crack }, uWood2: { value: C(o.wood2 || '#ffd2a0') }, uUseMap: { value: o.map ? 1 : 0 }
     };
   }
   /* material for one mesh (shares uniforms + masks, own uMaskMat) */
@@ -128,7 +153,7 @@ export class Surface {
       Object.assign(sh.uniforms, self.u); sh.uniforms.uMaskMat = mm;
       sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\n' + VERT_PARS)
         .replace('#include <begin_vertex>', '#include <begin_vertex>\nvMP=(uMaskMat*vec4(transformed,1.)).xyz;')
-        .replace('#include <beginnormal_vertex>', '#include <beginnormal_vertex>\nvMN=normalize(mat3(uMaskMat)*objectNormal);');
+        .replace('#include <beginnormal_vertex>', '#include <beginnormal_vertex>\nvMN=normalize(mat3(uMaskMat)*objectNormal);{ mat3 mm=mat3(uMaskMat); sAxX=normalize(normalMatrix*vec3(mm[0][0],mm[1][0],mm[2][0])); sAxY=normalize(normalMatrix*vec3(mm[0][1],mm[1][1],mm[2][1])); sAxZ=normalize(normalMatrix*vec3(mm[0][2],mm[1][2],mm[2][2])); }');
       sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\n' + FRAG_PARS)
         .replace('#include <color_fragment>', '#include <color_fragment>\n' + FRAG_COLOR)
         .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor=clamp(sR,.04,1.);')
@@ -190,7 +215,7 @@ export class Surface {
 
   /* paint: p,n part-local, r radius (part units), layer name, mode 'sub'|'add'|'set', amt 0..1 */
   dab(p, n, r, layer, mode = 'sub', amt = .5, target = 0) {
-    const [ti, ch] = LAYERS[layer], D = ti ? this.B : this.A;
+    const [ti, ch] = LAYERS[layer], D = ti ? this.B : this.A; let moved = 0;
     this.forCells(p, n, (c, x, y, w) => {
       const [eu, ev] = this.cellExt(c), rx = r / eu * (this.cw - 2 * this.pad), ry = r / ev * (this.ch - 2 * this.pad);
       const col = c % 3, row = (c / 3) | 0, x0 = col * this.cw, x1 = x0 + this.cw - 1, y0 = row * this.ch, y1 = y0 + this.ch - 1;
@@ -198,23 +223,34 @@ export class Surface {
       const k = Math.min(1, w * 1.6) * amt * 255;
       for (let Y = iy0; Y <= iy1; Y++) for (let X = ix0; X <= ix1; X++) {
         const dx = (X - x) / rx, dy = (Y - y) / ry, d = dx * dx + dy * dy; if (d >= 1) continue;
-        const f = (1 - d) * (1 - d) * k, o = (Y * this.W + X) * 4 + ch;
-        if (mode === 'sub') D[o] = Math.max(0, D[o] - f); else if (mode === 'add') D[o] = Math.min(255, D[o] + f);
-        else D[o] = D[o] + (target * 255 - D[o]) * Math.min(1, f / 255);
+        const f = (mode === "sub" ? (1 - d * d) : (1 - d) * (1 - d)) * k, o = (Y * this.W + X) * 4 + ch, v0 = D[o];
+        if (mode === 'sub') D[o] = Math.max(0, v0 - f); else if (mode === 'add') D[o] = Math.min(255, v0 + f);
+        else D[o] = v0 + (target * 255 - v0) * Math.min(1, f / 255);
+        moved += Math.abs(D[o] - v0);
       }
     });
     this.dirty = true;
+    return moved / 255; /* texel-units of material actually changed (drives FX) */
   }
   setLayer(layer, v) { const [ti, ch] = LAYERS[layer], D = ti ? this.B : this.A, b = Math.round(clamp(v, 0, 1) * 255); for (let i = ch; i < D.length; i += 4) D[i] = b; this.dirty = true; }
   getAt(layer, i) { const [ti, ch] = LAYERS[layer]; return (ti ? this.B : this.A)[i * 4 + ch] / 255; }
   /* procedural authoring: fill a layer with patchy noise. fn(p,n,noise) -> 0..1 */
   author(layer, fn, seed = 1) {
     const [ti, ch] = LAYERS[layer], D = ti ? this.B : this.A;
-    const pnt = new THREE.Vector3(), nn = new THREE.Vector3();
-    for (let y = 0; y < this.H; y += 2) for (let x = 0; x < this.W; x += 2) {
+    const pnt = new THREE.Vector3(), nn = new THREE.Vector3(), hw = Math.ceil(this.W / 2) + 1, hh = Math.ceil(this.H / 2) + 1, G = new Float32Array(hw * hh);
+    /* evaluate on a half-res grid (per atlas cell), then bilinear-fill so there are no 2x2 blocks */
+    for (let gy = 0; gy < hh; gy++) for (let gx = 0; gx < hw; gx++) {
+      const x = Math.min(this.W - 1, gx * 2), y = Math.min(this.H - 1, gy * 2);
       this.texelPos(x, y, pnt, nn);
-      const v = Math.round(clamp(fn(pnt, nn, (q) => fbm(pnt.x * q + seed * 1.3, pnt.y * q - seed, pnt.z * q + seed * .7)), 0, 1) * 255);
-      for (let dy = 0; dy < 2 && y + dy < this.H; dy++) for (let dx = 0; dx < 2 && x + dx < this.W; dx++) D[((y + dy) * this.W + x + dx) * 4 + ch] = v;
+      G[gy * hw + gx] = clamp(fn(pnt, nn, (q) => fbm(pnt.x * q + seed * 1.3, pnt.y * q - seed, pnt.z * q + seed * .7)), 0, 1);
+    }
+    for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) {
+      const c = this.cellOf[y * this.W + x], gx = x / 2, gy = y / 2; let x0 = Math.floor(gx), y0 = Math.floor(gy), fx = gx - x0, fy = gy - y0;
+      /* never blend across atlas cells */
+      if (this.cellOf[y * this.W + Math.min(this.W - 1, (x0 + 1) * 2)] !== c) fx = 0;
+      if (this.cellOf[Math.min(this.H - 1, (y0 + 1) * 2) * this.W + x] !== c) fy = 0;
+      const a = G[y0 * hw + x0], b = G[y0 * hw + x0 + 1], d = G[(y0 + 1) * hw + x0], e = G[(y0 + 1) * hw + x0 + 1];
+      D[(y * this.W + x) * 4 + ch] = Math.round(((a * (1 - fx) + b * fx) * (1 - fy) + (d * (1 - fx) + e * fx) * fy) * 255);
     }
     this.dirty = true;
   }
