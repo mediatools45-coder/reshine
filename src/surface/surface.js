@@ -108,16 +108,9 @@ if(sNk+sNkC>.01){
 `;
 
 let SURF_ID = 0;
-/* CC0 normal maps (@pmndrs/assets, from emmelleppi/normal-maps): 15 = pitted, 24 = cracked crust */
-import pitsUrl from '@pmndrs/assets/normals/0015.webp.js';
-import crackUrl from '@pmndrs/assets/normals/0024.webp.js';
-function nrmTex(url) {
-  const img = new Image(), t = new THREE.Texture(img);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; t.colorSpace = THREE.NoColorSpace;
-  img.onload = () => { t.needsUpdate = true; }; img.src = url;
-  return t;
-}
-export const NRM = { pits: nrmTex(pitsUrl), crack: nrmTex(crackUrl) };
+/* CC0 normal maps (see assets/materials.js): pitted + cracked crust, sampled tri-planar in part space */
+import { ccNormal } from '../assets/materials.js';
+export const NRM = { pits: ccNormal('pits'), crack: ccNormal('crack') };
 export class Surface {
   /* o: kind 'metal'|'wood'|'plastic', cell [w,h] texels, look params */
   constructor(name, o = {}) {

@@ -118,8 +118,8 @@ function closeMenu() { G.paused = false; $('menu').classList.remove('on'); }
 
 function gallery(kinds) {
   const g = new THREE.Group(); g.name = 'gallery'; R.scene.add(g); if (G.item) G.item.root.visible = false;
-  kinds.forEach((k, i) => { const t = makeTool(k); t.userData.body.rotation.set(.35, .6, -.25); t.position.set((i % 4 - 1.5) * 2.4, 2.6 - Math.floor(i / 4) * 2.6, 0); g.add(t); });
-  CAM.gt.set(0, 0, 0); CAM.t.copy(CAM.gt); CAM.gdist = CAM.dist = 23; CAM.el = CAM.gel = .15; CAM.az = CAM.gaz = 0; G.mode = 'gallery'; $('shop').classList.remove('on'); document.body.className = 'intro';
+  kinds.forEach((k, i) => { const t = makeTool(k); t.userData.body.rotation.set(.35, .6, -.25); t.position.set((i % 4 - 1.5) * 2.3, 2.4 - Math.floor(i / 4) * 2.6, 0); g.add(t); });
+  CAM.gt.set(0, -.2, 0); CAM.t.copy(CAM.gt); CAM.gdist = CAM.dist = 15.5; CAM.el = CAM.gel = .15; CAM.az = CAM.gaz = 0; G.mode = 'gallery'; $('shop').classList.remove('on'); document.body.className = 'intro';
 }
 /* ---------- test helper: what to do on screen for the current step ---------- */
 function auto() {

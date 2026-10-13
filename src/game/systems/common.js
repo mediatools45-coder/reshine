@@ -9,6 +9,7 @@ import { clamp, lerp, rnd, tween, later, clock, vib, moveTo, smooth, ease } from
 import { glass, mat, metal, cyl, box, rbox, mesh, lathe, torus, plastic } from '../../assets/geo.js';
 import { BENCH_Y } from '../../render/studio.js';
 import { lump } from '../../assets/geo.js';
+import { M } from '../../assets/materials.js';
 
 export const I = () => G.item;
 const tmpV = new THREE.Vector3();
@@ -73,8 +74,8 @@ export function chunksOn(it, key, n, o = {}) {
   }
   return out;
 }
-const lumpGeom = (size, seed) => lump(size, seed, 1.25, .5, 1.1, 1);
-let CRUST = null; export function crustMat() { if (!CRUST) CRUST = new THREE.MeshStandardMaterial({ color: '#5e2a12', roughness: 1, metalness: 0, flatShading: true }); return CRUST; }
+const lumpGeom = (size, seed) => lump(size, seed, 1.25, .5, 1.1, 2);
+export function crustMat() { return M.crust(); }
 export const v3 = (x, y, z) => new THREE.Vector3(x, y, z);
 /* layout helper: place parts by the centre of their bounds. map: {key: {c:[x,y,z], s, r:[x,y,z]}} */
 export function centered(map) {

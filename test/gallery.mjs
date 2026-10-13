@@ -2,7 +2,7 @@ import { chromium } from 'playwright-core';
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: 900, height: 1100 } });
 page.on('pageerror', e => console.log('[E]', e.message));
-await page.goto('file://' + process.cwd() + '/dist/index.html');
+await page.goto('file://' + process.cwd() + '/dist/index.html?noadapt=1');
 await page.waitForFunction(() => window.__g && !document.getElementById('load').classList.contains('on'), null, { timeout: 300000 });
 const sets = [['hammer', 'wire', 'soft', 'detail', 'soap', 'pick', 'sand', 'grind', 'buff', 'file', 'cloth', 'micro'], ['sponge', 'pad', 'stain', 'spray', 'paint', 'oil', 'water', 'screw', 'pry', 'tweez', 'puller', 'pliers'], ['sandgun', 'shiner', 'compound', 'vacuum', 'blower', 'filler', 'press', 'heat', 'punch']];
 const which = +(process.argv[2] || 0);

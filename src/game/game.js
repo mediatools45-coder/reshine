@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { R, raycast, rayAt, project } from '../render/engine.js';
 import { aimLights } from '../render/lighting.js';
+import { updateStudio } from '../render/studio.js';
 import { T, setTool, toolAim, updateTool } from '../assets/tools.js';
 import { sfx, setLoop } from '../fx/audio.js';
 import { glints, clearParticles, P as PART } from '../fx/particles.js';
@@ -110,7 +111,7 @@ function updateCam(dt) {
   c.lookAt(CAM.t.clone().add(j)); G.shake = Math.max(0, G.shake - dt * 3);
   const W = R.W, H = R.H; c.setViewOffset(W, H, 0, H * CAM.off, W, H); c.updateProjectionMatrix();
   R.focus = CAM.dist; R.aperture = clamp(9 / CAM.dist, .5, 1.2);
-  aimLights(CAM.t);
+  aimLights(CAM.t); updateStudio(CAM.t);
 }
 export function camImpulse(k = .8) { G.shake = Math.max(G.shake, k); }
 

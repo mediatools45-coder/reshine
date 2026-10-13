@@ -69,7 +69,11 @@ export function lump(r, seed, sx = 1, sy = .55, sz = 1, det = 1) {
     const n = hs(Math.round(x * 3), Math.round(y * 3), Math.round(z * 3)) * .35 + hs(Math.round(x * 6), Math.round(y * 6), Math.round(z * 6)) * .18;
     const k = r * (.78 + n); p.setXYZ(i, x * k * sx, y * k * sy, z * k * sz);
   }
-  g.deleteAttribute('normal'); g.deleteAttribute('uv'); const m = mergeVertices(g, 1e-4); m.computeVertexNormals(); return m;
+  g.deleteAttribute('normal'); g.deleteAttribute('uv'); const m = mergeVertices(g, 1e-4); m.computeVertexNormals();
+  /* box-projected uvs so detail normal maps work on lumps */
+  const q = m.attributes.position, nn = m.attributes.normal, uv = new Float32Array(q.count * 2);
+  for (let i = 0; i < q.count; i++) { const ax = Math.abs(nn.getX(i)), ay = Math.abs(nn.getY(i)), az = Math.abs(nn.getZ(i)); const [u, v] = ax > ay && ax > az ? [q.getZ(i), q.getY(i)] : ay > az ? [q.getX(i), q.getZ(i)] : [q.getX(i), q.getY(i)]; uv[i * 2] = u * 2.5 / Math.max(r, .05); uv[i * 2 + 1] = v * 2.5 / Math.max(r, .05); }
+  m.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); return m;
 }
 export const merge = list => mergeGeometries(list.map(g => g.index ? g.toNonIndexed() : g), false);
 export const mergeIdx = list => mergeGeometries(list, false);

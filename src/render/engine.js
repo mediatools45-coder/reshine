@@ -14,7 +14,6 @@ export function initEngine(canvas) {
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.VSMShadowMap;
   R.renderer = renderer;
   const scene = new THREE.Scene(); R.scene = scene;
-  scene.background = new THREE.Color(0x0b1418); scene.fog = new THREE.Fog(0x0b1418, 40, 90);
   const camera = new THREE.PerspectiveCamera(36, 1, .1, 140); R.camera = camera; scene.add(camera);
   initLighting(renderer, scene);
   initPost(renderer);

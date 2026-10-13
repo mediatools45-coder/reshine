@@ -2,7 +2,7 @@
    cool rim and warm kicker. The key follows the camera target so the object is always well lit. */
 import * as THREE from 'three';
 import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
-import studioUrl from '@pmndrs/assets/hdri/studio.exr.js'; /* CC0, Poly Haven via @pmndrs/assets */
+import studioUrl from '@pmndrs/assets/hdri/workshop.exr.js'; /* CC0, Poly Haven via @pmndrs/assets */
 
 export const L = { key: null, rim: null, kick: null, hemi: null, envTex: null };
 const KEY_OFF = new THREE.Vector3(-6, 11, 9);
@@ -28,13 +28,15 @@ export function initLighting(renderer, scene) {
     scene.environment = env; L.envTex = env; scene.environmentIntensity = .7; scene.environmentRotation = new THREE.Euler(0, 2.2, 0);
   } catch (e) { console.warn('HDRI fallback', e); }
   /* small sky/ground fill so shadowed sides never go flat black */
-  L.hemi = new THREE.HemisphereLight(0xc8d8ea, 0x2a2018, .28); scene.add(L.hemi);
-  const key = new THREE.DirectionalLight(0xfff0dd, 2.0); key.castShadow = true;
+  L.hemi = new THREE.HemisphereLight(0xd8d4c8, 0x3a2614, .3); scene.add(L.hemi);
+  const key = new THREE.DirectionalLight(0xffe4c4, 2.1); key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048); const sc = key.shadow.camera; sc.left = -8; sc.right = 8; sc.top = 8; sc.bottom = -8; sc.near = 1; sc.far = 40;
   key.shadow.bias = -.0002; key.shadow.normalBias = .03; key.shadow.radius = 9; key.shadow.blurSamples = 16;
   scene.add(key, key.target); L.key = key;
   L.rim = new THREE.DirectionalLight(0xbfd4ff, 1.3); L.rim.position.set(6, 5, -9); scene.add(L.rim);
   L.kick = new THREE.DirectionalLight(0xffc896, .5); L.kick.position.set(9, 1.5, 5); scene.add(L.kick);
+  /* lights must reach both the sharp layer and the blurred backdrop layer */
+  for (const l of [L.hemi, key, L.rim, L.kick]) l.layers.enableAll();
 }
 /* keep the key light (and its shadow frustum) centred on what the camera is looking at */
 export function aimLights(target) { if (!L.key) return; L.key.position.copy(target).add(KEY_OFF); L.key.target.position.copy(target); }

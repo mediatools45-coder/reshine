@@ -8,15 +8,51 @@ import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { R } from './engine.js';
 
-/* main scene pass: normal render, or split before/after render for the comparison slider */
+/* Backdrop depth of field: the workshop backdrop lives on layer BG. It is rendered at reduced
+   resolution, blurred with a separable gaussian (two widths), then the sharp foreground (object,
+   tools, particles, near bench) is drawn on top. The object can never bleed into the blur. */
+export const BG = 1;
+const BLUR_FS = `uniform sampler2D tMap; uniform vec2 uDir; varying vec2 vUv;
+void main(){ vec3 c=texture2D(tMap,vUv).rgb*.2270270;
+  c+=(texture2D(tMap,vUv+uDir*1.3846153).rgb+texture2D(tMap,vUv-uDir*1.3846153).rgb)*.3162162;
+  c+=(texture2D(tMap,vUv+uDir*3.2307692).rgb+texture2D(tMap,vUv-uDir*3.2307692).rgb)*.0702702;
+  gl_FragColor=vec4(c,1.); }`;
+const VS = 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }';
+class Backdrop {
+  constructor() {
+    const o = { type: THREE.HalfFloatType, depthBuffer: true };
+    this.a = new THREE.WebGLRenderTarget(4, 4, o); this.b = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, depthBuffer: false });
+    this.blur = new FullScreenQuad(new THREE.ShaderMaterial({ uniforms: { tMap: { value: null }, uDir: { value: new THREE.Vector2() } }, vertexShader: VS, fragmentShader: BLUR_FS, depthTest: false, depthWrite: false }));
+    this.copy = new FullScreenQuad(new THREE.ShaderMaterial({ uniforms: { tMap: { value: null } }, vertexShader: VS, fragmentShader: 'uniform sampler2D tMap; varying vec2 vUv; void main(){ gl_FragColor=vec4(texture2D(tMap,vUv).rgb,1.); }', depthTest: false, depthWrite: false }));
+    this.scale = .5;
+  }
+  render(renderer, W, H) {
+    const w = Math.max(2, Math.round(W * this.scale)), h = Math.max(2, Math.round(H * this.scale));
+    if (this.a.width !== w || this.a.height !== h) { this.a.setSize(w, h); this.b.setSize(w, h); }
+    const cam = R.camera, L = cam.layers.mask; cam.layers.set(BG);
+    R.fgFade && (R.fgFade.value = 0);
+    renderer.setRenderTarget(this.a); renderer.setClearColor(0x0c0a08, 1); renderer.clear(true, true, false); renderer.render(R.scene, cam);
+    cam.layers.mask = L; R.fgFade && (R.fgFade.value = 1);
+    /* blur strength in pixels of the low-res buffer; two passes at growing radius ≈ wide soft bokeh */
+    const u = this.blur.material.uniforms, k = R.bgBlur ?? 1;
+    for (const r of [1.2 * k, 2.6 * k]) {
+      u.tMap.value = this.a.texture; u.uDir.value.set(r / w, 0); renderer.setRenderTarget(this.b); this.blur.render(renderer);
+      u.tMap.value = this.b.texture; u.uDir.value.set(0, r / h); renderer.setRenderTarget(this.a); this.blur.render(renderer);
+    }
+    return this.a.texture;
+  }
+}
+/* main scene pass: blurred backdrop + sharp foreground; split before/after render for the comparison slider */
 class ScenePass extends Pass {
-  constructor() { super(); this.needsSwap = false; this.clear = true; }
+  constructor() { super(); this.needsSwap = false; this.clear = true; this.bd = new Backdrop(); }
   render(renderer, writeBuffer, readBuffer) {
     const t = readBuffer, cmp = R.cmp; R.depthTex = t.depthTexture;
-    renderer.setRenderTarget(t); renderer.setClearColor(0x0a1218, 1); renderer.clear(true, true, true);
-    if (!cmp) { renderer.render(R.scene, R.camera); return; }
-    const x = Math.round(cmp.x * t.width);
+    const bg = this.bd.render(renderer, t.width, t.height);
+    renderer.setRenderTarget(t); renderer.setClearColor(0x0c0a08, 1); renderer.clear(true, true, true);
+    this.bd.copy.material.uniforms.tMap.value = bg; this.bd.copy.render(renderer);
     const old = renderer.autoClear; renderer.autoClear = false;
+    if (!cmp) { renderer.render(R.scene, R.camera); renderer.autoClear = old; return; }
+    const x = Math.round(cmp.x * t.width);
     t.scissorTest = true;
     t.scissor.set(0, 0, x, t.height); renderer.setRenderTarget(t); cmp.before(true); renderer.render(R.scene, R.camera);
     t.scissor.set(x, 0, t.width - x, t.height); renderer.setRenderTarget(t); cmp.before(false); renderer.render(R.scene, R.camera);
@@ -33,13 +69,17 @@ float h(vec2 p){ return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453); }
 void main(){
   vec4 c0=texture2D(tColor,vUv); vec3 acc=c0.rgb; float wt=1.;
   if(uMaxR>.5){
-    float z0=lin(texture2D(tDepth,vUv).r); float r0=coc(z0)*uMaxR; float rm=max(r0,uMaxR*.35);
-    for(int i=0;i<24;i++){
-      float fi=float(i)+.5; float rr=sqrt(fi/24.); float a=fi*2.39996;
-      vec2 uv=vUv+vec2(cos(a),sin(a))*rr*rm*uPx; float len=rr*rm;
-      float zs=lin(texture2D(tDepth,uv).r); float rs=coc(zs)*uMaxR;
-      float w=(zs<z0-.4)?clamp(rs-len+1.,0.,1.):clamp(min(max(rs,r0),rs+r0)-len+1.,0.,1.);
-      vec3 sc=texture2D(tColor,uv).rgb; acc+=sc*w; wt+=w;
+    /* background-only blur: a pixel gathers only samples at its own depth or farther, so a sharp
+       object never bleeds into the blurred backdrop (no bright fringe around silhouettes) */
+    float z0=lin(texture2D(tDepth,vUv).r); float r0=coc(z0)*uMaxR;
+    if(r0>.5){
+      for(int i=0;i<24;i++){
+        float fi=float(i)+.5; float rr=sqrt(fi/24.); float a=fi*2.39996;
+        vec2 uv=vUv+vec2(cos(a),sin(a))*rr*r0*uPx; float len=rr*r0;
+        float zs=lin(texture2D(tDepth,uv).r); if(zs<z0-max(.3,z0*.04)) continue;
+        float rs=coc(zs)*uMaxR; float w=clamp(min(rs,r0)-len+1.,0.,1.);
+        acc+=texture2D(tColor,uv).rgb*w; wt+=w;
+      }
     }
   }
   vec3 col=acc/wt;
@@ -65,7 +105,7 @@ class DofPass extends Pass {
   render(renderer, writeBuffer, readBuffer) {
     const u = this.mat.uniforms, c = R.camera; u.tColor.value = readBuffer.texture; u.tDepth.value = R.depthTex;
     u.uPx.value.set(1 / readBuffer.width, 1 / readBuffer.height); u.uNear.value = c.near; u.uFar.value = c.far; u.uFocus.value = R.focus; u.uRange.value = Math.max(.8, R.focus * .14);
-    u.uMaxR.value = (R.q >= 2 && !R.cmp ? 6.5 * R.aperture : 0) * R.dpr * (readBuffer.height / 900 + .3); u.uTime.value = performance.now() / 1000;
+    u.uMaxR.value = (R.dofOn && R.q >= 2 && !R.cmp ? 6.5 * R.aperture : 0) * R.dpr * (readBuffer.height / 900 + .3); u.uTime.value = performance.now() / 1000;
     renderer.setRenderTarget(this.renderToScreen ? null : writeBuffer); this.quad.render(renderer);
   }
 }
@@ -80,7 +120,7 @@ export function initPost(renderer) {
   ao.updateGtaoMaterial({ radius: .55, distanceExponent: 1.4, thickness: 1.2, scale: 1.1, samples: 12 }); ao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 5, rings: 2, samples: 12 });
   const setSize = ao.setSize.bind(ao); ao.setSize = (w, h) => setSize(Math.max(1, w >> 1), Math.max(1, h >> 1));
   R.ao = ao; composer.addPass(ao);
-  R.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), .28, .5, 2.4); composer.addPass(R.bloom);
+  R.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), .25, .45, 4.0); composer.addPass(R.bloom);
   R.dof = new DofPass(); composer.addPass(R.dof);
   composer.addPass(new OutputPass());
 }
