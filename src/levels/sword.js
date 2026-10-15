@@ -1,7 +1,7 @@
 /* Level 03 - Sword: large-scale corrosion removal and a dramatic polished blade reveal (ported from v12, 16 steps) */
 import * as THREE from 'three';
 import { lathe, cyl, box, mesh, mat, metal, lump } from '../assets/geo.js';
-import { paint, pick, extract, snap, hold, bath, taps, inspect, compare, stage, chunksOn, I, lp, toast } from '../game/systems/index.js';
+import { paint, pick, extract, snap, hold, bath, taps, timing, inspect, compare, stage, chunksOn, I, lp, toast } from '../game/systems/index.js';
 import { G, RIG, camImpulse } from '../game/game.js';
 import { sfx } from '../fx/audio.js';
 import { sparks, puff, flakes, glints } from '../fx/particles.js';
@@ -74,6 +74,8 @@ export default {
     P.blade.surf.dab(new THREE.Vector3(BL.x0 + .58 * BL.L, -.1, -.05), new THREE.Vector3(0, 0, -1), .25, 'crust', 'add', 1);
   },
   layouts: { stain: { grip: { p: [-1.5, -1.6, .4], r: [0, 0, Math.PI / 2], s: 1.2 } } },
+  /* the steps players do; repeats and filler are applied silently (see game.js loadLevel) */
+  keep: ['rivets', 'handle', 'chip', 'wash', 'grind', 'file', 'polish', 'stain', 'attach', 'secure'],
   steps(it) {
     const metals = ['blade', 'guard', 'tang'], P = () => I().parts;
     const RIV = [0, 1, 2];
@@ -142,12 +144,12 @@ export default {
         tut: { title: 'Stain the grip', body: 'The old grip is dry and faded. Brush stain over the wood for a rich, warm finish.', demo() { return { type: 'scrub', pts: [lp('grip', [-.3, 0, .25]), lp('grip', [-2.3, 0, .25])] }; } }
       }),
       snap({ id: 'attach', name: 'Reattach the Handle', hint: 'Carry the grip to the glowing outline on the tang.', done: 'Handle seated', keys: ['grip'], cam: { preset: 'full' }, thr: 1.1 }),
-      taps({
-        id: 'secure', name: 'Hammer the Rivets Home', tool: 'hammer', hint: 'Tap each new brass rivet three times to set it flush.', done: 'Rivets set', strike: true, hits: 3, chip: 'Rivets', cam: { preset: 'work', focus: [-1.4, 0, 0], r: 1.9 },
+      timing({
+        id: 'secure', name: 'Hammer the Rivets Home', tool: 'hammer', hint: 'Strike each brass rivet when the needle is in the green.', done: 'Rivets set', hits: 2, chip: 'Rivets', label: 'Strike in the green', speed: 2.5, win: .22, cam: { preset: 'work', focus: [-1.4, 0, 0], r: 1.9 },
         enter() { for (const i of RIV) { const b = P()['brass' + i]; b.g.visible = true; b.state = 'home'; b.g.position.copy(b.home.pos).add(new THREE.Vector3(0, 0, .36)); } },
         targets: () => RIV.map(i => ({ key: 'brass' + i, p: [0, 0, .32] })),
-        onHit(t, n) { const b = P()[t.key]; camImpulse(.4); sfx('clink'); b.g.position.z = b.home.pos.z + .36 * (1 - n / 3); const w = b.wp([0, 0, .3]); sparks(w, 6); if (n >= 3) { sfx('ping'); glints(w, 5, .12); } },
-        tut: { title: 'Set the new rivets', body: 'Fresh brass rivets sit in the holes. Tap each one three times to drive it flush with the grip.' }
+        onHit(t, n) { const b = P()[t.key]; camImpulse(.4); sfx('clink'); b.g.position.z = b.home.pos.z + .36 * (1 - n / 2); const w = b.wp([0, 0, .3]); sparks(w, 6); if (n >= 2) { sfx('ping'); glints(w, 5, .12); } },
+        tut: { title: 'Set the new rivets', body: 'Fresh brass rivets sit in the holes. Watch the needle and strike when it crosses the green to drive each rivet flush.' }
       }),
       paint({
         id: 'final', name: 'Final Polish', tool: 'micro', input: 'Wipe', hint: 'Wipe away dust and fingerprints from the whole sword.', done: 'Showroom finish', cam: { preset: 'full' },

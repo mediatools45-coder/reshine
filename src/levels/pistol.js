@@ -42,6 +42,8 @@ export default {
     it.extra.chunks = chunksOn(it, 'barrel', 9, { size: .2, filter: (p, n) => n.z > .3 && p.x > .4 }).concat(chunksOn(it, 'lock', 4, { size: .17, filter: (p, n) => n.z > .5 }));
   },
   layouts: {},
+  /* the steps players do; repeats and filler are applied silently (see game.js loadLevel) */
+  keep: ['pick', 'compound', 'straighten', 'cracks', 'grind', 'polish', 'finish', 'parts', 'check'],
   steps(it) {
     const P = () => I().parts, metals = ['barrel', 'lock', 'cock', 'frizzen', 'guard'];
     const beads = () => { const s = G.steps.find(x => x.id === 'cracks'); return s && s.paths ? s.paths.map(p => p.bead) : []; };

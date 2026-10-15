@@ -69,6 +69,8 @@ export default {
     dial: centered({ movement: { c: [0, 0, 0], s: 1.2 } }), case: centered({ case: { c: [0, 0, 0], s: 1.1 } }),
     straps: centered({ strapT: { c: [-.75, 0, 0], r: [0, 0, 0] }, strapB: { c: [.75, 0, 0], r: [0, 0, Math.PI] } })
   },
+  /* the steps players do; repeats and filler are applied silently (see game.js loadLevel) */
+  keep: ['crystal', 'back', 'movement', 'hands', 'dial', 'bracelet', 'polish', 'handsIn', 'crystalIn', 'time'],
   steps(it) {
     const P = () => I().parts;
     return [

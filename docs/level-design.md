@@ -90,3 +90,14 @@ Source: `docs/video-steps.md` (245 steps across 6 videos). Rules:
 
 ## Levels without a video (Sword, Lighter, Watch, Pistol)
 Same rules apply: cut each to 8–10 steps, remove repeated cleaning passes, and add one or two of the new mechanics (timing strike, heat, tuning, laser engraving). Those step lists come after the six above are approved.
+
+## Built (current game)
+| Level | Steps (incl. before/after) | New mechanics |
+|---|---|---|
+| Padlock | 10 | heat + twist key, chisel seam strikes, timing rivets, key test |
+| Pocket Knife | 11 | seam trace with burr, scraper, whetstone strokes, forge + bend bail ring |
+| Alarm Clock | 10 | tweeze gears, citric swirl, braze holes with torch, wind & ring |
+| Keyboard | 10 | singe hairs, dishwasher load + run, peroxide/UV bath, LED polish |
+| Typewriter | 10 | pull typebars, rust-remover swirl, sandblast, laser logo, oil pivots |
+| Stratocaster | 11 | snip strings, stripper + scraper, metallic red, fret press timing, tuner |
+| Sword / Lighter / Watch / Pistol | 10–11 | repeats folded away (`keep` list); sword rivets use timing |

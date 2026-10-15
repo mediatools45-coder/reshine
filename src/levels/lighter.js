@@ -72,6 +72,8 @@ export default {
     for (const d of it.extra.defects) it.parts[d.key].surf.dab(new THREE.Vector3(...d.p), new THREE.Vector3(0, 0, 1), .38, 'crust', 'add', 1);
   },
   layouts: { board: BOARD, basket: BASKET },
+  /* the steps players do; repeats and filler are applied silently (see game.js loadLevel) */
+  keep: ['shell', 'cotton', 'hinge', 'wheel', 'grind', 'polish', 'mech', 'newcot', 'paint', 'test'],
   steps(it) {
     const P = () => I().parts, seqs = SEQ;
     const shell = (extra = []) => stage({ home: ASM.concat(SCR, extra), hide: COT.concat(['cavity']) });

@@ -127,7 +127,10 @@ export function loadLevel(def, opt = {}) {
   for (const s of it.surfs.concat(bf.surfs)) { s.finishFades(); s.update(0); }
   G.item = it; G.before = bf; G.level = def; G.step = -1; G.finishing = false; G.busy = false; G.flags = {};
   RIG.flip = 0; RIG.off.set(0, 0, 0); RIG.lift = 0; RIG.pose = def.pose || [-.35, .25]; RIG.q.copy(homeQuat()); RIG.extraQ.identity(); RIG.home = true;
-  G.steps = def.steps(it); G.steps.forEach((s, i) => { s.i = i; s.prog = 0; });
+  /* def.keep: the steps players do; any other step is folded into the next kept one and applied instantly */
+  const raw = def.steps(it); let pre = []; G.steps = [];
+  for (const s of raw) { if (def.keep && !def.keep.includes(s.id) && s.id !== 'compare') pre.push(s); else { s.pre = pre; pre = []; G.steps.push(s); } }
+  G.steps.forEach((s, i) => { s.i = i; s.prog = 0; });
   it.root.scale.setScalar(def.scale || 1); bf.root.scale.setScalar(def.scale || 1);
   setView({ preset: 'show' }, true);
   return it;
@@ -137,10 +140,19 @@ export function enterStep(i) {
   G.item.hideGhosts(); G.fitExtra = [];
   RIG.pose = s.pose || G.level.pose || [-.35, .25]; RIG.home = true; RIG.spin = 0; if (!s.keepTurn) faceFront(); RIG.extraQ.identity();
   setTool(s.tool, s.toolScale || G.level.toolScale || 1);
+  if (s.pre && s.pre.length) runSilently(s.pre);
   try { if (s.stage) s.stage(); s.enter && s.enter(); } catch (e) { console.error('enter ' + s.id, e); }
   if (!clock.ff) { later(30, () => { if (G.steps[G.step] === s) setView(s.cam || { preset: 'full' }); }); setView(s.cam || { preset: 'full' }); }
   G.log.push({ ev: 'step_start', level: G.level.id, step: s.id, t: G.time });
   HOOK.ui && HOOK.ui('enter', s);
+}
+function runSilently(list) {
+  const ff = clock.ff; clock.ff = true;
+  for (const p of list) {
+    try { if (p.stage) p.stage(); p.enter && p.enter(); p.skip && p.skip(); if (p.complete) p.complete(true); p.exit && p.exit(); } catch (e) { console.error('auto ' + p.id, e); }
+    for (const sf of G.item.surfs) sf.finishFades();
+  }
+  clock.ff = ff; G.chips = []; G.hold = false; RIG.off.set(0, 0, 0); G.offGoal = null; G.fitExtra = []; RIG.extraQ.identity();
 }
 export function finishStep(skipped) {
   const s = st(); if (!s || G.finishing) return; G.finishing = true; G.hold = false; G.down = false; T.spinning = false; setLoop(null);

@@ -105,7 +105,7 @@ export default {
       screws({ id: 'screws', name: 'Unscrew the Case', hint: 'Press and hold each corner screw.', done: 'Case open', keys: ['screw0', 'screw1', 'screw2', 'screw3'], dir: 'out', axis: [0, 0, 1], spinAxis: [0, 0, 1], rise: .45, cam: { preset: 'full' },
         complete() { for (const k of ['screw0', 'screw1', 'screw2', 'screw3']) I().toTray(k); } }),
       load({ id: 'dishwasher', name: 'Run It Through the Dishwasher', hint: 'Tap the shell, base and plate to load them, then hold the button to wash.', done: 'Squeaky clean (but still yellow)', chip: 'Wash', time: 3, cam: { preset: 'full' },
-        items: () => [{ key: 'shell', label: 'Shell' }, { key: 'plate', label: 'Plate' }, { key: 'base', label: 'Base' }],
+        items: () => [{ key: 'shell', label: 'Shell', p: [-3.2, BD / 2 - .25, .1] }, { key: 'plate', label: 'Plate', p: [0, 0, -.1] }, { key: 'base', label: 'Base', p: [3.2, -BD / 2 + .2, -.2] }],
         machine, slot: i => machine().position.clone().add(new THREE.Vector3((i - 1) * .4, .6 + i * .45, 0)),
         onProg(k) { for (const n of ['shell', 'base', 'cable']) { const s = P()[n].surf; s.u.uDirtRO.value.y = 1 - k; } },
         onDone() { for (const n of ['shell', 'base', 'cable']) { const s = P()[n].surf; s.setLayer('dirt', 0); s.setLayer('crust', 0); s.u.uDirtRO.value.y = 1; } },

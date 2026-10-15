@@ -82,6 +82,8 @@ export function load(o) {
       G.chips = [{ label: o.chip || 'Loaded', get: () => this.prog }]; if (o.enter) o.enter.call(this);
     },
     nodes() { const it = I(); return this.list.filter(x => !x.done).flatMap(x => it.parts[x.key].pickables()); },
+    mpos(x) { const P = I().parts[x.key]; return x.p ? P.wp(x.p) : P.g.localToWorld(P.center.clone()); },
+    assist(sx, sy) { let best = null, bd = 60; for (const x of this.list) { if (x.done) continue; const q = project(this.mpos(x)); const d = Math.hypot(q.x - sx, q.y - sy); if (d < bd) { bd = d; best = { object: I().parts[x.key].meshes[0], point: this.mpos(x), face: null }; } } return best; },
     onDown(hit) {
       if (this.phase !== 'load' || !hit) return; const part = hit.object.userData.part; const x = part && this.list.find(i => !i.done && i.key === part.key); if (!x) return;
       x.done = true; const i = this.list.indexOf(x), g = part.g, w0 = g.getWorldPosition(new THREE.Vector3()), dest = o.slot(i), q0 = g.getWorldQuaternion(new THREE.Quaternion());
@@ -97,7 +99,7 @@ export function load(o) {
       if (this.k >= 1 && !this.fin) this.finish_();
     },
     finish_() { this.fin = true; this.needsHold = false; G.hold = false; G.ui && G.ui('hold'); sfx('ding'); if (o.onDone) o.onDone.call(this); later(500, () => finishStep()); },
-    markers() { if (this.phase !== 'load') return []; const it = I(); return this.list.filter(x => !x.done).map(x => ({ pos: it.parts[x.key].g.localToWorld(it.parts[x.key].center.clone()), r: 26, label: x.label })); },
+    markers() { if (this.phase !== 'load') return []; return this.list.filter(x => !x.done).map(x => ({ pos: this.mpos(x), r: 26, label: x.label })); },
     skip() { this.k = 1; if (o.onProg) o.onProg.call(this, 1); if (o.onDone) o.onDone.call(this); },
     exit() { this.fin = false; this.needsHold = false; if (this.m) this.m.visible = false; G.fitExtra = []; const it = I(); for (const x of this.list || []) { const p = it.parts[x.key]; if (p.g.parent !== p.home.parent) { p.home.parent.attach(p.g); } it.home(x.key, 0); } if (o.exit) o.exit.call(this); },
     tut: o.tut || { title: o.name, body: o.hint, demo() { const it = I(), x = this.list && this.list.find(y => !y.done); return x ? { type: 'tap', pts: [it.parts[x.key].g.localToWorld(it.parts[x.key].center.clone())] } : null; } }

@@ -14,6 +14,7 @@ const SAVE_KEY = 'rw_save_v1';
 const save = store.json(SAVE_KEY, {});
 const persist = () => store.setJson(SAVE_KEY, save);
 /* padlock lost its first (inspection) step: shift an in-progress save back by one */
+if (!save._v3) { for (const k in save) if (save[k] && typeof save[k] === 'object') save[k].step = 0; save._v3 = 1; save._v2 = 1; store.setJson(SAVE_KEY, save); }
 if (!save._v2) { if (save.padlock && save.padlock.step > 0) save.padlock.step--; save._v2 = 1; store.setJson(SAVE_KEY, save); }
 const qs = new URLSearchParams(location.search);
 let tickKeys = () => { };
@@ -53,8 +54,8 @@ async function makeThumbs() {
   const all = LEVELS; let i = 0;
   for (const def of all) {
     $('loadTxt').textContent = 'Laying out ' + def.name + '…'; $('loadBar').style.width = (i / all.length * 100) + '%';
-    if (!store.get('rw_td3_' + def.id)) await new Promise(r => setTimeout(r, 16));
-    const tk = 'rw_td3_' + def.id; def.thumb = store.get(tk);
+    if (!store.get('rw_td4_' + def.id)) await new Promise(r => setTimeout(r, 16));
+    const tk = 'rw_td4_' + def.id; def.thumb = store.get(tk);
     try { if (!def.thumb) { def.thumb = snapshot(def); store.set(tk, def.thumb); } } catch (e) { console.error('thumb ' + def.id, e); }
     i++;
   }
