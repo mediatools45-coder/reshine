@@ -16,7 +16,7 @@ export function trace(o) {
     enter() {
       const it = I(); this.paths = o.paths().map(p => ({ ...p, cur: 0 }));
       for (const p of this.paths) {
-        if (!p.bead) { const P = it.parts[p.key], curve = new THREE.CatmullRomCurve3(p.pts.map(v => new THREE.Vector3(...v))); p.curve = curve; const g = new THREE.TubeGeometry(curve, 64, o.width || .05, 8, false); p.bead = mesh(g, mat(o.bead || '#d9c7a0', { roughness: .5 }), { cast: false }); p.bead.userData.nofit = true; P.g.add(p.bead); p.seg = 64; p.rad = 8; p.samples = curve.getSpacedPoints(80); }
+        if (!p.bead) { const P = it.parts[p.key], curve = new THREE.CatmullRomCurve3(p.pts.map(v => new THREE.Vector3(...v))); p.curve = curve; const g = new THREE.TubeGeometry(curve, 64, o.width || .05, 8, false); p.bead = mesh(g, o.beadMat ? o.beadMat() : mat(o.bead || '#d9c7a0', { roughness: .5 }), { cast: false }); p.bead.userData.nofit = true; P.g.add(p.bead); p.seg = 64; p.rad = 8; p.samples = curve.getSpacedPoints(80); }
         p.bead.visible = true; p.bead.geometry.setDrawRange(0, 0); p.cur = 0;
       }
       G.chips = [{ label: o.chip || 'Seams', get: () => this.prog }]; if (o.enter) o.enter.call(this);
@@ -31,7 +31,13 @@ export function trace(o) {
         const t = bi / (p.samples.length - 1), tol = (o.tol || .45) / (worldScale(P.g) / worldScale(I().root));
         if (bd < tol && t <= p.cur + .16) { const nc = Math.max(p.cur, t); if (nc > p.cur) { p.cur = nc >= .96 ? 1 : nc; did = true; this.grow(p); } }
       }
-      if (did) { sfx(o.snd || 'soap', 80); if (Math.random() < .5) drops(hit.point, 1, o.dropCol || [.85, .78, .62]); }
+      if (did) {
+        sfx(o.snd || 'soap', 80);
+        if (o.fx === 'laser') { emit({ x: hit.point.x, y: hit.point.y, z: hit.point.z, vx: rnd(-.3, .3), vy: rnd(.3, .9), vz: rnd(-.3, .3), g: 0, drag: 2, life: .35, s0: .08, s1: .02, c: [1, .4, .3], a: 1, type: 2, add: true, floor: null }); if (Math.random() < .4) puff(hit.point, [.6, .6, .62], 1, { a: .25, s0: .05, s1: .15 }); }
+        else if (o.fx === 'braze') { sparks(hit.point, 3); emit({ x: hit.point.x, y: hit.point.y, z: hit.point.z, vx: 0, vy: .8, vz: 0, g: -.4, drag: 1.5, life: .5, s0: .15, s1: .35, c: [1, .5, .15], a: .7, type: 0, add: true, fade: 1, floor: null }); }
+        else if (o.fx === 'sparks') { sparks(hit.point, 2); if (Math.random() < .4) puff(hit.point, [.4, .3, .25], 1, { a: .3 }); }
+        else if (Math.random() < .5) drops(hit.point, 1, o.dropCol || [.85, .78, .62]);
+      }
       this.prog = this.paths.reduce((a, p) => a + p.cur, 0) / this.paths.length;
       if (this.paths.every(p => p.cur >= 1) && !this.fin) { this.fin = true; sfx('ping'); later(400, () => finishStep()); }
     },

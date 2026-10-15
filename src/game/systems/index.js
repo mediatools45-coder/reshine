@@ -14,3 +14,6 @@ export * from './bath.js';
 export * from './taps.js';
 export * from './cycle.js';
 export * from './compare.js';
+export * from './heat.js';
+export * from './timing.js';
+export * from './extra.js';

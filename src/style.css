@@ -153,3 +153,11 @@ body.stepIn #bottom{animation:sup .5s .15s both cubic-bezier(.2,.8,.2,1)}
 }
 @media (hover:hover) and (pointer:fine){.rbtn:hover,.iconbtn:hover{border-color:rgba(255,217,138,.6)}.big:hover{filter:brightness(1.06)}.tile:hover{border-color:rgba(242,184,75,.55);transform:translateY(-2px)}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* gauge for timing / tuning / angle steps */
+#meter{width:min(86vw,360px);text-align:center;pointer-events:none}
+#mLab{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--brass);margin-bottom:5px;text-shadow:0 1px 6px rgba(0,0,0,.9)}
+.mtrack{position:relative;height:18px;border-radius:9px;background:rgba(10,8,6,.7);border:1px solid rgba(255,255,255,.18);overflow:hidden;box-shadow:inset 0 2px 6px rgba(0,0,0,.5)}
+#mZone{position:absolute;top:0;bottom:0;background:linear-gradient(180deg,#8cf0c4,#3ec28b);opacity:.85}
+#mNeedle{position:absolute;top:-2px;bottom:-2px;width:5px;margin-left:-2.5px;border-radius:3px;background:#fff;box-shadow:0 0 10px rgba(255,255,255,.9)}
+#meter.in #mNeedle{background:#d6ffe9;box-shadow:0 0 14px #6fe0b0}

@@ -2,7 +2,7 @@
    cool rim and warm kicker. The key follows the camera target so the object is always well lit. */
 import * as THREE from 'three';
 import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
-import studioUrl from '@pmndrs/assets/hdri/workshop.exr.js'; /* CC0, Poly Haven via @pmndrs/assets */
+import studioUrl from '@pmndrs/assets/hdri/studio.exr.js'; /* CC0, Poly Haven via @pmndrs/assets: neutral reflections so bare steel reads silver */
 
 export const L = { key: null, rim: null, kick: null, hemi: null, envTex: null };
 const KEY_OFF = new THREE.Vector3(-6, 11, 9);

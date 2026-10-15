@@ -11,7 +11,7 @@ export function makeTool(kind) {
   const Rt = new THREE.Group(), B = new THREE.Group(), PN = new THREE.Group(); Rt.add(B); B.add(PN); Rt.name = 'tool:' + kind;
   const { spin, stand, flat } = buildTool(kind, PN);
   Rt.userData = { kind, spin, body: B, stand, wn: flat ? 1.15 : .5, wc: flat ? .2 : .75, flat };
-  Rt.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = false; } });
+  Rt.traverse(o => { if (o.isMesh) { o.castShadow = o.material.blending !== THREE.AdditiveBlending && !(o.material.isMeshBasicMaterial); o.receiveShadow = false; } });
   return Rt;
 }
 
@@ -53,7 +53,7 @@ export function updateTool(dt, active) {
   if (T.kind === 'hammer' || T.kind === 'punch') { n.position.y += T.anim * .8 * T.scale; d.addScaledVector(nr, T.anim * .9).normalize(); }
   T.dir = T.dir ? T.dir.lerp(d, .2).normalize() : d.clone();
   u.body.quaternion.setFromUnitVectors(up, T.dir);
-  const loopK = T.spinning ? (T.kind === 'buff' ? 'buff' : T.kind === 'screw' ? null : 'grind') : (active && T.onSurf && T.vis > .5 && { spray: 1, paint: 1, oil: 1, water: 1, sandgun: 1, vacuum: 1, blower: 1, heat: 1 }[T.kind]) ? T.kind : null;
+  const loopK = T.spinning ? (T.kind === 'buff' ? 'buff' : T.kind === 'screw' ? null : 'grind') : (active && T.onSurf && T.vis > .5 && { spray: 1, paint: 1, oil: 1, water: 1, sandgun: 1, vacuum: 1, blower: 1, heat: 1, torch: 1, laser: 1, lighter: 1 }[T.kind]) ? ({ lighter: 'torch' }[T.kind] || T.kind) : null;
   setLoop(loopK);
   if (active && T.onSurf && T.hitPt && u.stand && T.vis > .5) streamFx(n, T.kind, dt);
   if (u.spin && T.spinning) u.spin.rotation.y += dt * (T.kind === 'screw' ? 14 : 40);

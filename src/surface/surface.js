@@ -132,7 +132,7 @@ export class Surface {
       uDirtC: { value: C(o.dirt || '#5c5145') }, uDirtRO: { value: new THREE.Vector2(o.dirtR ?? .95, o.dirtO ?? 1) },
       uRust1: { value: C(o.rust1 || '#3a1608') }, uRust2: { value: C(o.rust2 || '#9a4614') }, uCrustC: { value: C(o.crust || '#3b1a0c') },
       uSandC: { value: C(o.sand || (kind === 1 ? '#d9b98c' : '#b9bdc1')) }, uSandR: { value: o.sandR ?? (kind === 1 ? .78 : .42) },
-      uPolC: { value: C(o.pol || '#d6dadf') }, uPolR: { value: o.polR ?? .08 },
+      uPolC: { value: C(o.pol || '#d6dadf') }, uPolR: { value: Math.max(o.polR ?? .14, .14) },
       uFinC: { value: C(o.fin || '#6b2a10') }, uFinP: { value: new THREE.Vector4(o.finR ?? .35, o.finM ?? 0, o.finCC ?? .6, 0) },
       uWetG: { value: 0 }, uGrainAx: { value: new THREE.Vector3(...(o.grain || [0, 1, 0])).normalize() }, uGrainS: { value: o.grainS || 1 },
       uGlow: { value: new THREE.Color(0, 0, 0) }, uBump: { value: o.bump ?? .45 }, uResG: { value: 0 }, uNrmR: { value: NRM.pits }, uNrmC: { value: NRM.crack }, uWood2: { value: C(o.wood2 || '#ffd2a0') }, uUseMap: { value: o.map ? 1 : 0 }

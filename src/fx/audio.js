@@ -78,6 +78,13 @@ export const SFX = {
   strum() { [82.4, 110, 146.8, 196, 246.9, 329.6].forEach((f, i) => pluck(f, .22, i * .03)); },
   string(i = 0) { pluck([82.4, 110, 146.8, 196, 246.9, 329.6][i % 6], .25); },
   twang() { pluck(rnd(90, 160), .18, 0, 1.2); tone(140, 60, .3, 'sawtooth', .02); },
+  pluckf(f = 196) { pluck(f, .26); },
+  torch() { noise(.25, rnd(600, 900), .05, .4, 'lowpass'); },
+  sizzle() { noise(.2, 6000, .04, .5, 'highpass', 3000); },
+  anvil() { tone(1850, 1800, .5, 'sine', .08); tone(2780, 2700, .35, 'sine', .04); tone(140, 60, .15, 'sine', .2); noise(.03, 4000, .15, 1, 'highpass'); },
+  miss() { tone(220, 160, .12, 'square', .04); },
+  laser() { tone(rnd(2600, 3200), rnd(2600, 3200), .05, 'sine', .015); noise(.04, 7000, .02, 1, 'highpass'); },
+  snip() { tone(2200, 900, .05, 'square', .05); noise(.03, 5000, .12, 1, 'highpass'); pluck(rnd(300, 500), .12, .01, .5); },
   stamp() { tone(160, 60, .12, 'sine', .25); noise(.05, 1200, .1, 1, 'lowpass'); },
   glass() { tone(3200, 3000, .3, 'sine', .04); tone(4700, 4500, .2, 'sine', .02); noise(.08, 6000, .06, 1, 'highpass'); },
   shatter() { for (let i = 0; i < 6; i++) { tone(rnd(2500, 5000), rnd(2000, 4000), .2, 'sine', .03, i * .03); } noise(.3, 5000, .12, .8, 'highpass'); }
@@ -87,7 +94,7 @@ const LOOPS = {
   water: { f: 1400, q: .5, type: 'bandpass', v: .11 }, sandgun: { f: 2600, q: .5, type: 'bandpass', v: .13 },
   grind: { f: 1800, q: 1.2, type: 'bandpass', v: .08, tone: 160 }, buff: { f: 900, q: .8, type: 'bandpass', v: .06, tone: 95 },
   vacuum: { f: 1100, q: .4, type: 'bandpass', v: .1, tone: 120 }, blower: { f: 700, q: .3, type: 'bandpass', v: .12 }, heat: { f: 400, q: .4, type: 'lowpass', v: .1 },
-  bath: { f: 500, q: .6, type: 'bandpass', v: .06, tone: 60 }
+  bath: { f: 500, q: .6, type: 'bandpass', v: .06, tone: 60 }, torch: { f: 700, q: .3, type: 'lowpass', v: .12 }, laser: { f: 6000, q: 2, type: 'bandpass', v: .03, tone: 2400 }, wash: { f: 1100, q: .3, type: 'bandpass', v: .1 }
 };
 const LP = { node: null, key: null };
 export function setLoop(key) {

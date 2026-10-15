@@ -1,7 +1,8 @@
 /* Level 07 - Twin-Bell Alarm Clock: glass, hands, bells, gears and a ticking + ringing payoff. Face toward +Z. */
 import * as THREE from 'three';
-import { lathe, cyl, box, rbox, torus, mesh, mat, metal, extrude, canvasTex, sphere, tube } from '../assets/geo.js';
-import { paint, extract, screws, snap, taps, bath, rotate, compare, stage, centered, I, lp } from '../game/systems/index.js';
+import { lathe, cyl, box, rbox, torus, mesh, mat, metal, extrude, canvasTex, sphere, tube, merge, xf } from '../assets/geo.js';
+import { paint, extract, pick, trace, snap, bath, rotate, compare, stage, centered, I, lp } from '../game/systems/index.js';
+import { STREAM_COL } from '../assets/tools.js';
 import { G, camImpulse } from '../game/game.js';
 import { sfx } from '../fx/audio.js';
 import { glints, sparks } from '../fx/particles.js';
@@ -22,18 +23,19 @@ function faceTex() {
 const handShape = (len, w) => { const s = new THREE.Shape(); s.moveTo(-w, -.18); s.lineTo(w, -.18); s.lineTo(w * .6, len * .78); s.lineTo(w * 1.6, len * .82); s.lineTo(0, len); s.lineTo(-w * 1.6, len * .82); s.lineTo(-w * .6, len * .78); s.lineTo(-w, -.18); return s; };
 
 export default {
-  id: 'clock', num: 7, name: 'Twin-Bell Alarm Clock', complexity: 'Medium-High', minutes: '5-7 min', seed: 71,
-  blurb: 'Rusty twin-bell', intro: 'A classic twin-bell alarm clock with rusty bells, cracked glass, faded paint and bent hands. Strip it to the gears, repaint the shell and make it tick and ring again.',
-  outro: 'Fresh paint, bright bells and a crisp tick, followed by a ring you can hear across the workshop.',
+  id: 'clock', num: 7, name: 'Twin-Bell Alarm Clock', complexity: 'Medium', minutes: '3-4 min', seed: 71,
+  blurb: 'Rusted-through 1950 clock', intro: 'A 1950 wind-up alarm clock: the case is rusted right through, the dial is stained and the brass movement is caked in rust and old grease. Rebuild it from the gears out and make it ring.',
+  outro: 'The rusted-through case is sealed and gloss black, the brass shines, and it rings across the workshop again.',
   pose: [-.3, .12], turnAxis: 'y', toolScale: 1,
   build(it) {
-    const look = { kind: 'metal', base: '#8a3a2c', baseR: .7, baseM: .2, sand: '#b5b0aa', pol: '#e9ecef', fin: '#c8392b', finR: .22, finM: .1, finCC: 1, dirt: '#4a3a2a', rust1: '#3a1608', rust2: '#9a4614', cell: [144, 144] };
+    const look = { kind: 'metal', base: '#2c2826', baseR: .7, baseM: .3, sand: '#b5b0aa', pol: '#e9ecef', fin: '#0c0c0e', finR: .12, finM: .25, finCC: 1, dirt: '#4a3a2a', rust1: '#3a1608', rust2: '#9a4614', cell: [144, 144] };
     const ss = it.surface('shell', look), shell = it.part('shell');
     shell.add(lathe([[R0 - .2, -DEP / 2], [R0, -DEP / 2 + .1], [R0 + .05, 0], [R0, DEP / 2 - .1], [R0 - .08, DEP / 2 + .02], [R0 - .3, DEP / 2 + .02]], 72), ss, { r: [Math.PI / 2, 0, 0] });
     for (const sx of [-1, 1]) { shell.add(cyl(.12, .2, 1, 16), ss, { p: [sx * 1.3, -R0 - .35, -.1], r: [0, 0, sx * .45] }); shell.add(sphere(.24, 16, 12), ss, { p: [sx * 1.55, -R0 - .78, -.1] }); }
     shell.add(cyl(.1, .1, .9, 12), ss, { p: [0, R0 + .35, -.2] }); shell.add(torus(.5, .09, 10, 32, Math.PI), ss, { p: [0, R0 + .75, -.2] });
     shell.add(cyl(.08, .08, 3.6, 12), ss, { p: [0, R0 + .35, -.2], r: [0, 0, Math.PI / 2] });
     for (const sx of [-1, 1]) { const b = it.part(sx < 0 ? 'bellL' : 'bellR', { p: [sx * 1.5, R0 + .55, -.2], r: [0, 0, sx * -.5] }); const sb = it.surface(b.key, { ...look, base: '#6e5d44', baseM: .55, pol: '#f3d58a', sand: '#c4a76a', cell: [96, 96] }); b.add(lathe([[.01, .95], [.4, .92], [.72, .7], [.85, .3], [.9, 0], [.92, -.05], [.85, -.04], [.78, .28], [.66, .62], [.36, .82], [.01, .85]], 40), sb); b.add(cyl(.07, .07, .3, 10), metal('#888', .4), { p: [0, 1.05, 0] }); b.hit(.6, [0, .5, .3]); }
+    it.extra.holes = [-.5, .35, 2.4].map(t => { const m = shell.add(new THREE.CircleGeometry(.2, 20), mat('#070504', { roughness: 1 }), { p: [Math.cos(t) * (R0 + .06), Math.sin(t) * (R0 + .06), .1], r: [0, Math.PI / 2, 0], nohit: true }); m.lookAt(new THREE.Vector3(Math.cos(t) * 9, Math.sin(t) * 9, .1)); m.position.set(Math.cos(t) * (R0 + .065), Math.sin(t) * (R0 + .065), .1); return { m, t }; });
     const hammer = it.part('hammer', { p: [0, R0 + .9, -.2] }); hammer.add(cyl(.03, .03, .6, 8), metal('#9a9a9a', .4)); hammer.add(sphere(.11, 12, 10), metal('#b0b0b0', .3), { p: [0, .3, 0] });
     const back = it.part('back', { p: [0, 0, -DEP / 2 - .02] }); back.add(cyl(R0 - .05, R0 - .05, .08, 64), metal('#7a756e', .5), { r: [Math.PI / 2, 0, 0] });
     for (const [x, y, k] of [[-.8, -.5, 'knobT'], [.8, -.5, 'knobA']]) { const kn = it.part(k, { parent: 'back', p: [x, y, -.12] }); kn.add(cyl(.28, .28, .14, 24), knurlMat('#c9c3b8', 1), { r: [Math.PI / 2, 0, 0] }); kn.add(box(.08, .5, .06), metal('#c9c3b8', .3), { p: [0, 0, -.1] }); kn.hit(.35); }
@@ -43,9 +45,16 @@ export default {
     const gl = it.part('glass', { p: [0, 0, DEP / 2 - .03] }); gl.add(glassG(), new THREE.MeshPhysicalMaterial({ map: old, color: '#ece6d4', transparent: true, opacity: .45, roughness: .35, depthWrite: false }), { r: [Math.PI / 2, 0, 0], cast: false });
     const gl2 = it.part('glass2', { p: [0, 0, DEP / 2 - .03] }); gl2.add(glassG(), new THREE.MeshPhysicalMaterial({ color: '#fff', transparent: true, opacity: .12, roughness: .02, depthWrite: false, envMapIntensity: 2 }), { r: [Math.PI / 2, 0, 0], cast: false }); gl2.g.visible = false; gl2.state = 'hidden';
     const sf = it.surface('face', { kind: 'plastic', map: faceTex(), baseR: .45, dirt: '#7a6a48', cell: [128, 128] }), face = it.part('face', { p: [0, 0, .42] }); face.add(cyl(R0 - .25, R0 - .25, .04, 64), sf, { r: [Math.PI / 2, 0, 0] });
-    const gears = it.part('gears', { p: [0, 0, 0] }), brass = metal('#c49a46', .3);
-    gears.add(box(2.6, 2.6, .06), metal('#9a9890', .45), { p: [0, 0, .2] }); gears.add(box(2.6, 2.6, .06), metal('#9a9890', .45), { p: [0, 0, -.35] });
-    for (const [x, y, r] of [[-.6, .4, .55], [.55, .3, .4], [0, -.6, .45], [.6, -.6, .25], [-.7, -.5, .3]]) { gears.add(cyl(r, r, .06, 32), brass, { p: [x, y, -.05], r: [Math.PI / 2, 0, 0] }); const n = Math.round(r * 36); for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2; gears.add(box(.07, .07, .06), brass, { p: [x + Math.cos(a) * r, y + Math.sin(a) * r, -.05], r: [0, 0, a], nohit: true }); } }
+    /* movement: brass plates + toothed wheels (each wheel one mesh so it can be tweezed out) */
+    const sg = it.surface('gears', { kind: 'metal', base: '#8a6a34', baseR: .5, baseM: .9, sand: '#c9a65c', pol: '#f2cf7a', polR: .08, dirt: '#4a3a22', rust1: '#3a1a08', rust2: '#7a4a1a', cell: [128, 128] });
+    const gears = it.part('gears', { p: [0, 0, 0] });
+    it.extra.front = gears.add(rbox(2.6, 2.6, .06, .03, 2), sg, { p: [0, 0, .2] }); gears.add(rbox(2.6, 2.6, .06, .03, 2), sg, { p: [0, 0, -.35] });
+    it.extra.wheels = [];
+    for (const [x, y, r] of [[-.6, .4, .55], [.55, .3, .4], [0, -.6, .45], [.6, -.6, .25], [-.7, -.5, .3]]) {
+      const parts = [xf(cyl(r, r, .06, 32), { r: [Math.PI / 2, 0, 0] })], n = Math.round(r * 36);
+      for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2; parts.push(xf(box(.07, .07, .06), { p: [Math.cos(a) * r, Math.sin(a) * r, 0], r: [0, 0, a] })); }
+      const m = gears.add(merge(parts), sg, { p: [x, y, -.05] }); it.extra.wheels.push(m);
+    }
     gears.add(tube(Array.from({ length: 40 }, (_, i) => { const a = i / 39 * Math.PI * 7, r = .1 + i / 39 * .45; return [Math.cos(a) * r - .2, Math.sin(a) * r + .1, -.25]; }), .015, 120, 4), metal('#3a3a3a', .4), { nohit: true });
     for (const k of ['hour', 'minute', 'alarm']) { const H = HANDS[k], h = it.part(k, { parent: 'face', p: [0, 0, H.z - .42], r: [0, 0, H.a] }); h.add(extrude(handShape(H.len, H.w), .02, 0), mat(k === 'alarm' ? '#c0392b' : '#1e1a16', { roughness: .4, metalness: .4 })); h.add(cyl(.09, .09, .05, 16), metal('#3a2a1a', .4), { r: [Math.PI / 2, 0, 0] }); h.hit(.2, [0, H.len * .5, 0]); }
     for (let i = 0; i < 2; i++) { const s = it.part('bscrew' + i, { p: [(i ? 1 : -1) * 1.5, R0 + .55, -.2] }); s.add(cyl(.1, .1, .12, 12), metal('#8f8a80', .45)); s.hit(.22); }
@@ -57,49 +66,51 @@ export default {
     P.face.surf.author('dirt', (p, n, N) => .35 + .6 * smooth(.35, .75, N(3.5) + N(10) * .3));
   },
   layouts: {
-    shell: centered({ shell: { c: [0, 0, 0] } }), bells: centered({ bellL: { c: [-1.2, 0, 0], r: [0, 0, 0] }, bellR: { c: [1.2, 0, 0], r: [0, 0, 0] } }),
-    face: centered({ face: { c: [0, 0, 0] } }), parts: centered({ gears: { c: [0, 0, 0], s: 1.2 } })
+    shell: centered({ shell: { c: [0, 0, 0] } }),
+    brass: centered({ gears: { c: [0, -.2, .4], s: 1.05 }, bellL: { c: [-2.1, 1.9, 0], r: [0, 0, 0], s: .8 }, bellR: { c: [2.1, 1.9, 0], r: [0, 0, 0], s: .8 } }),
+    parts: centered({ gears: { c: [0, 0, 0], s: 1.2 } })
   },
   steps(it) {
     const P = () => I().parts, BACK = [Math.PI - .3, .12];
     const tick = { on: false, t: 0 };
+    const showWheels = (v, front = false) => { for (const m of it.extra.wheels) m.visible = v; it.extra.front.visible = front; };
+    const R = R0 + .06, holePath = t => { const c = new THREE.Vector3(Math.cos(t) * R, Math.sin(t) * R, .1), tg = new THREE.Vector3(-Math.sin(t), Math.cos(t), 0), z = new THREE.Vector3(0, 0, 1), pts = []; for (let i = 0; i <= 16; i++) { const a = i / 16 * Math.PI * 2; pts.push(c.clone().addScaledVector(tg, Math.cos(a) * .28).addScaledVector(z, Math.sin(a) * .28).toArray()); } return pts; };
     return [
-      screws({ id: 'bells', name: 'Remove the Bells', hint: 'Hold the screwdriver on each bell screw, then the bells lift away.', done: 'Bells off', keys: ['bscrew0', 'bscrew1'], dir: 'out', axis: [0, 1, 0], rise: .5, cam: { preset: 'work', focus: [0, R0 + .6, -.2], r: 2.6 },
-        complete() { const it2 = I(); for (const k of ['bellL', 'bellR', 'bscrew0', 'bscrew1']) it2.toTray(k); } }),
-      extract({ id: 'back', name: 'Open the Rear Cover', tool: 'pry', hint: 'Pry the back cover off the clock.', done: 'Back open', pose: BACK, keepTurn: true, cam: { preset: 'full' }, chip: 'Cover',
-        items: [{ key: 'back', axis: [0, 0, -1], thr: 1.2, mk: [0, .8, -.15], label: 'Pry off' }] }),
-      extract({ id: 'bezel', name: 'Remove the Glass Bezel', tool: 'pry', hint: 'Pry the brass bezel off the front.', done: 'Bezel off', cam: { preset: 'full' }, chip: 'Bezel',
-        items: [{ key: 'bezel', axis: [0, 0, 1], thr: 1.2, mk: [0, R0 - .18, .1], label: 'Pry', flakes: false }] }),
-      extract({ id: 'glass', name: 'Remove the Damaged Glass', tool: 'hand', toolLabel: 'Suction Cup', hint: 'Lift the cracked glass out.', done: 'Glass out', cam: { preset: 'full' }, chip: 'Glass',
-        items: [{ key: 'glass', axis: [0, 0, 1], thr: 1.2, mk: [0, .6, .25], label: 'Lift', snd: 'glass', flakes: false }] }),
-      extract({ id: 'hands', name: 'Remove the Clock Hands', tool: 'tweez', hint: 'Lift each hand off the centre post.', done: 'Hands off', cam: { preset: 'macro', focus: [0, 0, .5], r: 2.3 }, chip: 'Hands',
-        items: [{ key: 'minute', axis: [0, 0, 1], thr: .7, mk: [0, 1.0, 0], flakes: false }, { key: 'hour', axis: [0, 0, 1], thr: .7, mk: [0, .6, 0], flakes: false, after: 'minute' }, { key: 'alarm', axis: [0, 0, 1], thr: .7, mk: [0, .55, 0], flakes: false, after: 'hour' }] }),
-      extract({ id: 'face', name: 'Remove the Clock Face', tool: 'hand', hint: 'Lift the dial away from the movement.', done: 'Dial out', cam: { preset: 'full' }, chip: 'Dial',
-        items: [{ key: 'face', axis: [0, 0, 1], thr: 1.2, mk: [0, -.9, 0], flakes: false }] }),
-      extract({ id: 'gears', name: 'Remove the Gear Module', tool: 'hand', hint: 'Pull the gear module out of the shell.', done: 'Module out', cam: { preset: 'full' }, chip: 'Module',
-        items: [{ key: 'gears', axis: [0, 0, 1], thr: 1.5, mk: [.55, .3, .25], flakes: false }] }),
-      paint({ id: 'shell', name: 'Brush the Rusty Shell', tool: 'wire', hint: 'Scrub the rust off the shell. It turns by itself.', done: 'Rust gone', cam: { preset: 'full' },
-        stage: () => stage({ layout: 'shell' }), parts: ['shell'], layer: 'rust', amt: .5, rad: .5, fx: 'rust', snd: 'wire', sndGap: 55, req: .8, also: [{ layer: 'dirt', amt: .5, finish: 0 }] }),
-      bath({ id: 'parts', kind: 'jar', name: 'Clean the Small Parts', hint: 'Lower the gear module into the cleaning jar, then hold the button.', done: 'Gears gleaming', liquid: '#4f9aa2', murk: '#5a3a1c', time: 3,
-        stage: () => stage({ hide: ['shell'], layout: 'parts' }), onDone() { } }),
-      paint({ id: 'bellsPolish', name: 'Polish the Bells', tool: 'buff', input: 'Circles', hint: 'Buff both bells until they shine.', done: 'Bells bright', cam: { preset: 'full' },
-        stage: () => stage({ hide: ['gears', 'shell'], layout: 'bells' }), parts: ['bellL', 'bellR'], layer: 'polish', mode: 'add', amt: .45, rad: .45, fx: 'polish', snd: 'polish', circles: true, req: .8, faces: null, also: [{ layer: 'rust', amt: 1, finish: 0 }, { layer: 'dirt', amt: 1, finish: 0 }, { layer: 'sand', mode: 'add', amt: .6, finish: 1 }] }),
-      paint({ id: 'repaint', name: 'Repaint the Outer Shell', tool: 'paint', input: 'Sweep', hint: 'Spray an even coat of fresh red over the shell.', done: 'Fresh paint', cam: { preset: 'full' },
-        stage: () => stage({ hide: ['bellL', 'bellR'], layout: 'shell' }), enter() { }, parts: ['shell'], layer: 'finish', mode: 'add', amt: .5, rad: .6, fx: 'paint', snd: 'soap', sndGap: 130, req: .85 }),
-      paint({ id: 'face', name: 'Restore the Clock Face', tool: 'sponge', input: 'Wipe', hint: 'Gently wipe the dial until it is clean and readable.', done: 'Face readable', cam: { preset: 'full' }, canTurn: false,
-        stage: () => stage({ hide: ['shell'], layout: 'face' }), parts: ['face'], layer: 'dirt', amt: .45, rad: .45, fx: 'foam', snd: 'soap', req: .82, faces: [4] }),
-      snap({ id: 'inside', name: 'Reassemble Mechanism and Hands', hint: 'Drop the gears, the dial and then each hand into place.', done: 'Mechanism restored', keys: ['gears', 'face', 'hour', 'minute', 'alarm'], ordered: true, cam: { preset: 'full' }, thr: .9,
-        stage: () => stage({ home: ['shell'], tray: ['gears', 'face', 'hour', 'minute', 'alarm'] }) }),
-      snap({ id: 'outside', name: 'Install New Glass and Bells', hint: 'Fit the new glass, the bezel, the back and both bells.', done: 'Clock complete', keys: ['glass2', 'bezel', 'back', 'bellL', 'bellR', 'bscrew0', 'bscrew1'], ordered: true, canTurn: true, cam: { preset: 'full' },
-        stage: () => stage({ home: ['shell', 'gears', 'face', 'hour', 'minute', 'alarm'], hide: ['glass'] }) }),
-      taps({ id: 'check', name: 'Time and Alarm Check', tool: 'hand', hint: 'Turn the time knob, then pull the alarm knob to ring the bells.', done: 'Tick tock... RING!', ordered: true, pose: BACK, keepTurn: true, cam: { preset: 'full' }, chip: 'Check',
-        targets: () => [{ key: 'knobT', label: 'Wind', need: 3 }, { key: 'knobA', label: 'Alarm' }],
-        onHit(t, n) {
-          if (t.key === 'knobT') { const k = P().knobT; k.g.rotateZ(1.2); sfx('ratchet'); P().minute.g.rotateZ(-.9); P().hour.g.rotateZ(-.075); if (n >= 3) { tick.on = true; tick.t = 0; sfx('tick'); } }
-          else { ring(); }
-        }, delay: 2600,
+      extract({ id: 'movement', name: 'Pull Out the Movement', tool: 'pry', hint: 'Pry the back cover off, then pull the movement out of the case.', done: 'Movement out', pose: BACK, keepTurn: true, cam: { preset: 'full' }, chip: 'Parts',
+        items: [{ key: 'back', axis: [0, 0, -1], thr: 1.2, mk: [0, .8, -.15], label: 'Pry off' }, { key: 'gears', axis: [0, 0, -1], thr: 1.6, mk: [.55, .3, -.3], label: 'Pull', after: 'back', flakes: false }],
+        complete() { const i2 = I(); for (const k of ['face', 'hour', 'minute', 'alarm', 'bezel']) i2.toTray(k); i2.hide('glass'); } }),
+      pick({ id: 'wheels', name: 'Tweeze Out the Gears', tool: 'tweez', grab: true, hint: 'Tap each brass wheel to lift it out with the tweezers.', done: 'Movement stripped', chip: 'Wheels', cam: { preset: 'full' },
+        stage: () => stage({ hide: ['shell', 'back', 'bellL', 'bellR', 'hammer', 'bscrew0', 'bscrew1'], layout: 'parts', fn: () => showWheels(true) }),
+        items: () => it.extra.wheels.map(m => ({ m, size: .3 })), puff: [.45, .35, .2],
+        tut: { title: 'Strip the movement', body: 'Tap each rusty wheel and the tweezers lift it out of the plates.', demo() { const w = it.extra.wheels.find(m => m.visible); return w ? { type: 'tap', pts: [w.getWorldPosition(new THREE.Vector3())] } : null; } } }),
+      bath({ id: 'acid', kind: 'jar', swirl: true, name: 'Citric Acid Bath', hint: 'Lower the movement into the jar, then swirl until the rust dissolves.', done: 'Clean brass', liquid: '#d8d27a', murk: '#9ab84a', turns: 2.2,
+        stage: () => stage({ layout: 'parts', fn: () => showWheels(true) }),
+        onProg(k) { P().gears.surf.u.uDirtRO.value.y = 1 - k; },
+        onDone() { const s = P().gears.surf; s.setLayer('rust', 0); s.setLayer('dirt', 0); s.u.uDirtRO.value.y = 1; },
+        tut: { title: 'Acid bath', body: 'Drag the movement into the citric acid, then swirl in circles. The solution turns yellow-green as the rust comes off the brass.' } }),
+      paint({ id: 'polish', name: 'Polish the Brass', tool: 'buff', input: 'Circles', hint: 'Buff the plates and both bells in small circles until they shine.', done: 'Mirror brass', cam: { preset: 'full' },
+        stage: () => stage({ layout: 'brass', fn: () => showWheels(true) }), parts: ['gears', 'bellL', 'bellR'], layer: 'polish', mode: 'add', amt: .45, rad: .45, fx: 'polish', snd: 'polish', circles: true, req: .8, faces: [4], also: [{ layer: 'rust', amt: 1, finish: 0 }, { layer: 'dirt', amt: 1, finish: 0 }, { layer: 'sand', mode: 'add', amt: .6, finish: 1 }],
+        enter() { this.toolSpin = true; } }),
+      trace({ id: 'braze', name: 'Braze the Rust Holes', tool: 'torch', hint: 'Trace the torch around each hole: molten brass fills it.', done: 'Holes sealed', fx: 'braze', snd: 'torch', width: .07, tol: .55, chip: 'Holes', keepBead: true, cam: { preset: 'full' },
+        stage: () => stage({ hide: ['gears', 'bellL', 'bellR'], layout: 'shell' }),
+        beadMat: () => metal('#c8a24a', .35),
+        paths: () => it.extra.holes.map(h => ({ key: 'shell', pts: holePath(h.t) })),
+        onPath(p) { const i = this.paths.indexOf(p), h = it.extra.holes[i]; if (h) h.m.visible = false; sfx('sizzle'); },
+        skip() { for (const p of this.paths) { p.cur = 1; this.grow(p); } for (const h of it.extra.holes) h.m.visible = false; },
+        tut: { title: 'Braze the holes', body: 'Rust ate through the case. Trace the glowing circle around each hole with the torch and molten brass seals it shut.' } }),
+      paint({ id: 'sand', name: 'Fill & Sand Smooth', tool: 'sand', input: 'Sand', hint: 'Sand the filled case smooth, rust and all.', done: 'Smooth as new', cam: { preset: 'full' },
+        stage: () => stage({ layout: 'shell' }), parts: ['shell'], layer: 'sand', mode: 'add', amt: .5, rad: .55, fx: 'sand', snd: 'sand', req: .8, also: [{ layer: 'rust', amt: .8, finish: 0 }, { layer: 'dirt', amt: 1, finish: 0 }] }),
+      paint({ id: 'spray', name: 'Spray Gloss Black', tool: 'paint', input: 'Sweep', hint: 'Spray an even coat of gloss black over the case.', done: 'Deep gloss black', cam: { preset: 'full' },
+        stage: () => stage({ layout: 'shell' }), parts: ['shell', 'back'], layer: 'finish', mode: 'add', amt: .5, rad: .6, fx: 'paint', snd: 'soap', sndGap: 130, req: .85,
+        enter() { STREAM_COL.paint = [.06, .06, .07]; }, exit() { STREAM_COL.paint = null; } }),
+      snap({ id: 'dial', name: 'Fit the New Dial & Hands', hint: 'Drop the movement, the new dial, each hand and the glass into place.', done: 'Clock face restored', keys: ['gears', 'face', 'hour', 'minute', 'alarm', 'glass2', 'bezel'], ordered: true, cam: { preset: 'full' }, thr: .9,
+        stage: () => stage({ home: ['shell', 'back', 'bellL', 'bellR', 'hammer', 'bscrew0', 'bscrew1'], tray: ['gears', 'face', 'hour', 'minute', 'alarm', 'glass2', 'bezel'], fn: () => { showWheels(true, true); const f = P().face.surf; f.setLayer('dirt', 0); } }) }),
+      rotate({ id: 'wind', name: 'Wind It & Ring It', tool: 'hand', toolLabel: 'Winding Key', hint: 'Circle around the winding key to wind the clock. It ticks, then rings!', done: 'Tick tock... RING!', pose: BACK, keepTurn: true, cam: { preset: 'full' }, turns: 1.5, label: 'Wind', chip: 'Wind',
+        center: () => P().knobT.g.getWorldPosition(new THREE.Vector3()),
+        onTurn(d, k) { P().knobT.g.rotateZ(d); P().minute.g.rotateZ(-d * .6); P().hour.g.rotateZ(-d * .05); if (k > .3 && !tick.on) { tick.on = true; tick.t = 0; } },
+        onDone() { later(300, ring); },
         update(dt) { if (!tick.on) return; tick.t += dt; if (tick.t > .5) { tick.t = 0; tick.s = !tick.s; sfx(tick.s ? 'tick' : 'tock'); } },
-        exit() { tick.on = false; } }),
+        exit() { tick.on = false; }, delay: 1800 }),
       compare({})
     ];
     function ring() {

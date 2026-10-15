@@ -286,6 +286,52 @@ export function buildTool(kind, PN) {
       for (const s of [-1, 1]) add(lat([[.06, 0], [.07, .05], [.07, .2], [.05, .24], [0, .25]], 24), M.plastic('#2f6f78', .4), [s * .35, .9, 0], [0, 0, -s * Math.PI / 2]);
       flat = true; break;
     }
+    case 'torch': case 'lighter': {
+      /* butane torch (or a small lighter): nozzle + additive blue/orange flame reaching the contact point */
+      const big = kind === 'torch', fl = new THREE.Group(); PN.add(fl);
+      const flame = (r, h, c, o) => { const m = new THREE.Mesh(new THREE.ConeGeometry(r, h, 16, 1, true), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); m.rotation.x = Math.PI; m.position.y = h / 2; m.castShadow = false; fl.add(m); return m; };
+      const H = big ? .55 : .3; flame(big ? .07 : .05, H, new THREE.Color(.5, .8, 3), .55); flame(big ? .035 : .03, H * .6, new THREE.Color(1.6, 1.8, 3), .8); if (!big) flame(.06, H * 1.1, new THREE.Color(3, 1.3, .3), .35);
+      fl.userData.flame = true;
+      if (big) {
+        add(lat([[.03, 0, 1], [.05, .02], [.05, .35], [.07, .4, 1]], 20), M.brass(.3), [0, H, 0]);
+        add(lat([[.07, 0], [.09, .05], [.09, .3, 1]], 24), M.darkSteel(.35), [0, H + .38, 0]);
+        add(rbox(.24, .3, .2, .06), M.plastic('#d4442c', .35), [0, H + .8, .05]);
+        add(lat([[.0, 0], [.2, 0, 1], [.22, .03], [.22, 1.0], [.18, 1.12], [0, 1.15]], 36), M.paint('#e8b72e', .35), [0, H + .95, 0]);
+        add(cyl(.222, .222, .3, 36, true), M.label('BUTANE', 'torch fuel', '#1d2328', '#e8b72e'), [0, H + 1.45, 0]);
+      } else {
+        add(rbox(.2, .5, .12, .04), M.plastic('#2f6fb0', .3), [0, H + .32, 0]); add(rbox(.21, .1, .13, .02), M.steel('#c9d0d5', .2), [0, H + .03, 0]);
+      }
+      stand = big ? .1 : .05; break;
+    }
+    case 'chisel': case 'scraper': {
+      const ch = kind === 'chisel';
+      if (ch) { add(lat([[.0, 0], [.07, .01, 1], [.08, .25], [.06, .9], [.08, 1.0, 1]], 6), M.steel('#b8c0c6', .25), [0, 0, 0]).scale.set(1, 1, .35); add(cyl(.11, .11, .12, 18), M.darkSteel(.4), [0, 1.04, 0]); add(lat([[.11, 0], [.12, .5], [.1, .58], [0, .6]], 24), M.wood('#9b6a3c', .5, .4), [0, 1.1, 0]); }
+      else { add(rbox(.5, .02, .3, .006), M.steel('#c9d0d5', .2), [0, .01, .1]); add(rbox(.12, .5, .04, .02), M.steel('#aab3ba', .25), [0, .25, .25], [-.5, 0, 0]); add(lat([[.06, 0], [.09, .1], [.1, .6], [.07, .7], [0, .72]], 24), M.plastic('#2f9aa0', .4), [0, .5, .52], [-.5, 0, 0]); flat = true; }
+      break;
+    }
+    case 'laser': {
+      /* fiber laser engraver head on a short arm: red aiming dot at the contact point */
+      add(new THREE.CylinderGeometry(.006, .006, .6, 6), new THREE.MeshBasicMaterial({ color: new THREE.Color(4, .3, .2), transparent: true, opacity: .8, blending: THREE.AdditiveBlending, depthWrite: false }), [0, .3, 0]);
+      add(lat([[.06, 0, 1], [.12, .03], [.12, .25], [.16, .3, 1], [.16, .7], [.12, .75]], 32), M.darkSteel(.3), [0, .6, 0]);
+      add(cyl(.11, .11, .02, 24), M.glassy('#ff6a4a', .2), [0, .6, 0]);
+      add(rbox(.5, .35, .5, .06), M.plastic('#d8dde0', .35), [0, 1.5, 0]); add(rbox(.2, .05, .02, .01), new THREE.MeshBasicMaterial({ color: new THREE.Color(.3, 2.5, .6) }), [0, 1.55, .26]);
+      stand = .4; break;
+    }
+    case 'snips': {
+      for (const sx of [-1, 1]) { add(extrude(shape([[0, 0], [.05, .02], [.04, .35], [0, .38]]), .03, .006), M.steel('#c9d0d5', .2), [sx * .02, 0, 0], [0, sx > 0 ? 0 : Math.PI, 0]); add(tube([[sx * .05, .4, 0], [sx * .15, .8, 0], [sx * .2, 1.3, 0]], .05, 20, 10), M.rubber('#e5632b', .5)); }
+      add(cyl(.05, .05, .1, 16), M.darkSteel(.3), [0, .38, 0], [Math.PI / 2, 0, 0]); break;
+    }
+    case 'stone': {
+      /* two-grit whetstone held flat */
+      add(rbox(1.0, .12, .3, .02), new THREE.MeshPhysicalMaterial({ color: '#c9b79a', roughness: .95, normalMap: M.grit('#c9b79a').normalMap }), [0, .06, 0]);
+      add(rbox(1.0, .1, .3, .02), new THREE.MeshPhysicalMaterial({ color: '#7a6f66', roughness: .95, normalMap: M.grit('#7a6f66').normalMap }), [0, .17, 0]);
+      add(rbox(1.08, .12, .38, .03), M.plastic('#2c3237', .5), [0, .27, 0]); flat = true; break;
+    }
+    case 'uv': {
+      add(rbox(1.2, .08, .5, .03), new THREE.MeshBasicMaterial({ color: new THREE.Color(.9, .5, 3.2) }), [0, .04, 0]);
+      add(rbox(1.3, .2, .6, .05), M.plastic('#26303a', .4), [0, .18, 0]); add(lat([[.05, 0], [.07, .1], [.06, .6], [0, .62]], 20), M.plastic('#26303a', .4), [0, .28, 0]);
+      flat = true; stand = .5; break;
+    }
     case 'crown': case 'magnify': default: break;
   }
   return { spin, stand, flat };

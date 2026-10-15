@@ -28,7 +28,7 @@ export function updateUI(dt) {
   const s = st();
   const turnOk = s && s.canTurn && !G.busy && !RIG.flipping && !G.finishing && G.mode === 'play';
   $('btnTurn').disabled = !turnOk;
-  if (!s || G.mode !== 'play') { updateMarkers([]); updateHand(dt); return; }
+  if (!s || G.mode !== 'play') { updateMarkers([]); updateHand(dt); $('meter').classList.add('hide'); return; }
   const p = clamp(s.prog || 0, 0, 1), sb = $('stepBar');
   sb.querySelector('b').style.width = (p * 100).toFixed(1) + '%'; $('sbPct').textContent = p >= .995 ? '✓' : Math.round(p * 100) + '%'; sb.classList.toggle('ok', p >= .995);
   const chips = G.chips || [];
@@ -42,6 +42,8 @@ export function updateUI(dt) {
   if (!UI.guide && UI.idle > 8 && canAct() && s.tut && !G.down) { UI.idle = 0; startGuide(s, 'stuck'); }
   $('btnSkip').classList.toggle('pulse', UI.stuck > 20 && !G.finishing);
   updateHand(dt);
+  const M = G.meter, me = $('meter'); me.classList.toggle('hide', !M);
+  if (M) { $('mLab').textContent = M.label || ''; const z = $('mZone'); z.style.left = (M.lo * 100) + '%'; z.style.width = ((M.hi - M.lo) * 100) + '%'; $('mNeedle').style.left = (clamp(M.v, 0, 1) * 100).toFixed(1) + '%'; me.classList.toggle('in', M.v >= M.lo && M.v <= M.hi); }
   if (s.compare) { const x = G.cmp * innerWidth; $('cmpLine').style.left = x + 'px'; $('cmpGrab').style.left = x + 'px'; $('cmpL').style.opacity = G.cmp > .18 ? 1 : 0; $('cmpR').style.opacity = G.cmp < .82 ? 1 : 0; }
 }
 

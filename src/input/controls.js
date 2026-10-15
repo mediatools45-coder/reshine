@@ -44,7 +44,7 @@ export function bindControls(cv) {
     const s = st();
     if (s && canAct() && e.button === 0) {
       const r = pickAt(e.clientX, e.clientY); if (!r.hit && s.assist) r.hit = s.assist(e.clientX, e.clientY);
-      if (r.hit || (s.grabAll && nearObject(e.clientX, e.clientY))) { startTool(s, r); return; }
+      if (r.hit || s.anywhere || (s.grabAll && nearObject(e.clientX, e.clientY))) { startTool(s, r); return; }
     }
     mode = 'spin'; RIG.drag = !rigLocked(); RIG.w.set(0, 0, 0);
   });
