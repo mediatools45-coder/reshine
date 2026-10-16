@@ -49,12 +49,15 @@ export function tickTweens(dt) {
 
 /* move an Object3D toward a transform */
 export function moveTo(obj, to, dur = .5, cb, arc = 0) {
+  /* a newer move always wins: the previous one stops moving the object (its callback still fires on time) */
+  const prev = obj.userData.mv; if (prev) prev.dead = true; obj.userData.mv = null;
   if (clock.ff || dur <= 0) {
     if (to.pos) obj.position.copy(to.pos); if (to.quat) obj.quaternion.copy(to.quat); if (to.scl != null) obj.scale.setScalar(to.scl);
     if (cb) cb(); return;
   }
-  const p0 = obj.position.clone(), q0 = obj.quaternion.clone(), s0 = obj.scale.x;
+  const p0 = obj.position.clone(), q0 = obj.quaternion.clone(), s0 = obj.scale.x, me = { dead: false }; obj.userData.mv = me;
   return tween(dur, k => {
+    if (me.dead) return;
     if (to.pos) { obj.position.lerpVectors(p0, to.pos, k); if (arc) obj.position.y += Math.sin(k * Math.PI) * arc; }
     if (to.quat) obj.quaternion.slerpQuaternions(q0, to.quat, k);
     if (to.scl != null) obj.scale.setScalar(lerp(s0, to.scl, k));

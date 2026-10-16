@@ -25,7 +25,7 @@ export function initLighting(renderer, scene) {
     const tex = new THREE.DataTexture(data.data, data.width, data.height, THREE.RGBAFormat, data.type);
     tex.mapping = THREE.EquirectangularReflectionMapping; tex.colorSpace = THREE.LinearSRGBColorSpace; tex.flipY = false; tex.needsUpdate = true;
     const pm = new THREE.PMREMGenerator(renderer); const env = pm.fromEquirectangular(tex).texture; pm.dispose(); tex.dispose();
-    scene.environment = env; L.envTex = env; scene.environmentIntensity = .42; scene.environmentRotation = new THREE.Euler(0, 2.2, 0);
+    scene.environment = env; L.envTex = env; scene.environmentIntensity = .55; scene.environmentRotation = new THREE.Euler(0, 2.2, 0);
   } catch (e) { console.warn('HDRI fallback', e); }
   /* night: a faint moonlit fill keeps shadow sides readable without flattening the contrast */
   L.hemi = new THREE.HemisphereLight(0x8ea4d8, 0x2a1a10, .18); scene.add(L.hemi);
