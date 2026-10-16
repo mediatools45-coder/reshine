@@ -9,17 +9,38 @@ import { sfx } from '../fx/audio.js';
 import { sparks, puff, glints } from '../fx/particles.js';
 import { smooth, later, clamp } from '../core/util.js';
 
-const HL = 4.0, HH = .82, PX = 1.75, PY = .05, BL = 3.2;
+const HL = 4.1, HH = .78, PX = 1.72, PY = 0, BL = 3.3, ZO = .17;
 const DARK = mat('#0c0907', { roughness: .9 });
 
+/* closed-knife outline: gently bellied bottom, straight spine, rounded ends */
 function handleShape() {
   const s = new THREE.Shape(), w = HL / 2, h = HH / 2;
-  s.moveTo(-w + .25, -h); s.lineTo(w - .4, -h + .03); s.quadraticCurveTo(w - .02, -h + .12, w, 0); s.quadraticCurveTo(w - .04, h - .06, w - .4, h);
-  s.lineTo(-w + .35, h - .03); s.quadraticCurveTo(-w - .1, h - .14, -w, 0); s.quadraticCurveTo(-w - .06, -h + .16, -w + .25, -h); return s;
+  s.moveTo(-w + .32, -h + .06);
+  s.bezierCurveTo(-.6, -h - .05, .9, -h - .05, w - .5, -h + .02);
+  s.quadraticCurveTo(w + .03, -h + .05, w, -.02);
+  s.quadraticCurveTo(w - .02, h - .03, w - .45, h);
+  s.bezierCurveTo(.8, h - .06, -.8, h - .06, -w + .4, h - .02);
+  s.quadraticCurveTo(-w - .06, h - .06, -w, .02);
+  s.quadraticCurveTo(-w - .02, -h + .08, -w + .32, -h + .06); return s;
 }
+/* end caps (bolsters): follow the outline, concave inner edge */
+function bolsterShape(front) {
+  const s = new THREE.Shape(), w = HL / 2, h = HH / 2, f = front ? 1 : -1, X = x => f * x;
+  s.moveTo(X(w - .62), -h + .03); s.lineTo(X(w - .5), -h + .02);
+  s.quadraticCurveTo(X(w + .03), -h + .05, X(w), -.02); s.quadraticCurveTo(X(w - .02), h - .03, X(w - .45), h - .01);
+  s.lineTo(X(w - .62), h - .03); s.quadraticCurveTo(X(w - .7), 0, X(w - .62), -h + .03); return s;
+}
+/* clip-point blade with choil and tang (drawn open, pointing +X, edge down) */
 function bladeShape() {
   const s = new THREE.Shape();
-  s.moveTo(-.15, .27); s.lineTo(BL * .6, .29); s.quadraticCurveTo(BL * .86, .27, BL, .03); s.quadraticCurveTo(BL * .8, -.22, BL * .52, -.28); s.lineTo(.25, -.28); s.quadraticCurveTo(-.06, -.28, -.2, -.05); s.quadraticCurveTo(-.25, .18, -.15, .27); return s;
+  s.moveTo(-.18, .25); s.lineTo(BL * .55, .27); s.quadraticCurveTo(BL * .78, .26, BL * .86, .14); s.quadraticCurveTo(BL * .95, .06, BL, .02);
+  s.quadraticCurveTo(BL * .82, -.2, BL * .5, -.25); s.lineTo(.42, -.25); s.quadraticCurveTo(.3, -.25, .28, -.17); s.quadraticCurveTo(.2, -.26, 0, -.26);
+  s.quadraticCurveTo(-.24, -.22, -.24, 0); s.quadraticCurveTo(-.24, .2, -.18, .25); return s;
+}
+/* the bevelled cutting edge: a thin band along the edge, slightly brighter once sharpened */
+function edgeShape() {
+  const s = new THREE.Shape();
+  s.moveTo(.42, -.25); s.lineTo(BL * .5, -.25); s.quadraticCurveTo(BL * .82, -.2, BL, .02); s.quadraticCurveTo(BL * .84, -.1, BL * .5, -.15); s.lineTo(.45, -.15); s.closePath(); return s;
 }
 /* bail ring wire: straight rod (k=0) bending into a closed ring (k=1) */
 function bailGeom(k) {
@@ -36,18 +57,24 @@ export default {
   pose: [-.2, .25], turnAxis: 'y', portraitRoll: .95,
   build(it) {
     const look = { kind: 'metal', base: '#5b5956', baseR: .55, baseM: .8, sand: '#c3c7cb', sandR: .3, pol: '#eef1f4', polR: .06, fin: '#2b2724', finR: .45, finM: .6, finCC: .4, dirt: '#4a3a2a', rust1: '#2e1206', rust2: '#8a3c12', crust: '#191412' };
-    const sh = it.surface('handle', { ...look, scratch: 1.4, cell: [160, 64] }), hd = it.part('handle');
-    for (const z of [-1, 1]) hd.add(extrude(handleShape(), .07, .03, 24), sh, { p: [0, 0, z * .12] });
-    hd.add(rbox(HL - .5, .16, .18, .05, 2), sh, { p: [-.1, HH / 2 - .1, 0] });
-    for (const sx of [-1, 1]) for (const z of [-1, 1]) hd.add(rbox(.55, HH + .03, .09, .05, 3), sh, { p: [sx * (HL / 2 - .3), 0, z * .19] });
-    hd.add(box(HL - .9, .05, .14), DARK, { p: [-.2, -HH / 2 + .1, 0], nohit: true });
+    const sh = it.surface('handle', { ...look, scratch: 1.4, cell: [176, 72] }), hd = it.part('handle');
+    for (const z of [-1, 1]) {
+      hd.add(extrude(handleShape(), .025, .006, 32), sh, { p: [0, 0, z * .075] });              /* liners */
+      hd.add(extrude(handleShape(), .045, .022, 32), sh, { p: [0, 0, z * .118], s: [.985, .93, 1] }); /* scales */
+      for (const f of [true, false]) hd.add(extrude(bolsterShape(f), .06, .025, 24), sh, { p: [0, 0, z * .125] });
+      const sl = new THREE.Shape(); sl.absellipse(0, 0, .32, .1, 0, Math.PI * 2); hd.add(extrude(sl, .012, .006, 24), sh, { p: [-.25, .04, z * .158] }); /* shield inlay */
+    }
+    hd.add(rbox(HL - 1.25, .11, .13, .04, 2), sh, { p: [-.05, HH / 2 - .085, 0] });   /* backspring along the spine */
+    hd.add(box(HL - 1.1, .34, .13), DARK, { p: [-.1, -.12, 0], nohit: true });       /* blade channel */
     const sp = it.surface('pins', { ...look, cell: [64, 64] }), pins = it.part('pins');
-    for (const [x, y] of [[PX, PY], [-HL / 2 + .35, 0]]) for (const z of [-1, 1]) pins.add(cyl(.085, .085, .03, 16), sp, { p: [x, y, z * .245], r: [Math.PI / 2, 0, 0] });
-    const sbl = it.surface('blade', { ...look, scratch: 1.6, cell: [176, 64] }), blade = it.part('blade', { p: [PX, PY, 0] });
-    blade.add(extrude(bladeShape(), .05, .02, 28), sbl, { r: [0, 0, Math.PI - .06] });
-    blade.add(box(.3, .05, .07), DARK, { p: [-.7, .22, 0], r: [0, 0, Math.PI - .06], nohit: true });
+    for (const [x, y, r] of [[PX, PY, .075], [-HL / 2 + .33, 0, .075], [-.85, .02, .045], [.55, .02, .045]]) for (const z of [-1, 1]) pins.add(sphere(r, 16, 10), sp, { p: [x, y, z * (r > .05 ? .185 : .158)], s: [1, 1, .45] });
+    const sbl = it.surface('blade', { ...look, scratch: 1.6, cell: [192, 64] }), blade = it.part('blade', { p: [PX, PY, 0] });
+    blade.add(extrude(bladeShape(), .028, .014, 36), sbl, { r: [0, 0, Math.PI - .06] });
+    for (const z of [-1, 1]) blade.add(extrude(edgeShape(), .004, 0, 24), sbl, { r: [0, 0, Math.PI - .06], p: [0, 0, z * .03], nohit: true });
+    const nn = new THREE.Shape(); nn.absellipse(0, 0, .16, .035, 0, Math.PI * 2);
+    for (const z of [-1, 1]) blade.add(extrude(nn, .006, 0, 16), DARK, { p: [-.75, -.2, z * .031], r: [0, 0, -.06], nohit: true }); /* nail nick */
     /* bail ring wire (made in the forge step) */
-    const sr = it.surface('ring', { ...look, cell: [64, 48] }), ring = it.part('ring', { p: [-HL / 2 - .25, 0, 0] });
+    const sr = it.surface('ring', { ...look, cell: [64, 48] }), ring = it.part('ring', { p: [-HL / 2 - .22, 0, 0] });
     it.extra.ringMesh = ring.add(bailGeom(1), sr, { r: [0, 0, Math.PI / 2] });
   },
   after(it) {
@@ -74,7 +101,7 @@ export default {
       trace({
         id: 'seam', name: 'Open the Seam', tool: 'grind', toolLabel: 'Carbide Burr', hint: 'Trace the burr along the line where blade and handle are fused.', done: 'Blade outline free', fx: 'sparks', snd: 'grind', tol: .5, width: .03, chip: 'Seam', cam: { preset: 'full' }, toolScale: .55,
         beadMat: () => mat('#120d0a', { roughness: 1 }),
-        paths: () => [{ key: 'handle', pts: [[-1.2, HH / 2 - .02, .27], [-.2, HH / 2 + .01, .27], [.8, HH / 2 - .01, .27], [1.6, HH / 2 - .1, .27]] }],
+        paths: () => [{ key: 'handle', pts: [[-1.2, HH / 2 - .06, ZO], [-.2, HH / 2 - .07, ZO], [.8, HH / 2 - .07, ZO], [1.45, HH / 2 - .08, ZO]] }],
         tut: { title: 'Find the seam', body: 'Blade and handle have rusted together. Trace the glowing line with the carbide burr to cut the rust out of the seam.' }
       }),
       bath({
@@ -87,17 +114,17 @@ export default {
         id: 'scrape', name: 'Scrape the Black Scale', tool: 'scraper', input: 'Scrape', hint: 'Scrape off the black scale the electrolysis loosened.', done: 'Scale gone', cam: { preset: 'full' },
         parts: metal3, layer: 'crust', amt: .6, rad: .38, fx: 'rust', snd: 'scrape', req: .8, need: .3,
         onDab(hit) { if (Math.random() < .25) puff(hit.point, [.1, .09, .08], 1, { a: .4 }); },
-        tut: { title: 'Scrape it off', body: 'The black scale is soft now. Drag the scraper over the knife and watch big black flakes peel away.', demo() { return { type: 'scrub', pts: [lp('handle', [-1.4, 0, .27]), lp('handle', [1.2, 0, .27])] }; } }
+        tut: { title: 'Scrape it off', body: 'The black scale is soft now. Drag the scraper over the knife and watch big black flakes peel away.', demo() { return { type: 'scrub', pts: [lp('handle', [-1.4, 0, ZO]), lp('handle', [1.2, 0, ZO])] }; } }
       }),
       paint({
         id: 'wheel', name: 'Wire-Wheel Reveal', tool: 'grind', input: 'Scrub', hint: 'Run the wire wheel over the knife. Bright steel appears under the grey.', done: 'Bright steel!', cam: { preset: 'full' }, toolScale: .7,
         parts: metal3, layer: 'residue', amt: .55, rad: .42, fx: 'rust', snd: 'grind', req: .8, also: [{ layer: 'rust', amt: .7, finish: 0 }, { layer: 'sand', mode: 'add', amt: .6, finish: 1 }, { layer: 'crust', amt: 1, finish: 0 }],
         enter() { this.toolSpin = true; },
-        tut: { title: 'The big reveal', body: 'Drag the spinning wire wheel over the knife. The dull grey lump turns into bright, shiny steel.', demo() { return { type: 'scrub', pts: [lp('handle', [-1.4, 0, .27]), lp('blade', [-2.4, 0, .05])] }; } }
+        tut: { title: 'The big reveal', body: 'Drag the spinning wire wheel over the knife. The dull grey lump turns into bright, shiny steel.', demo() { return { type: 'scrub', pts: [lp('handle', [-1.4, 0, ZO]), lp('blade', [-2.4, 0, .05])] }; } }
       }),
       taps({
         id: 'pins', name: 'Punch Out the Pins', tool: 'punch', hint: 'Tap each pin twice to drive it out.', done: 'Knife comes apart', strike: true, hits: 2, chip: 'Pins', cam: { preset: 'full' },
-        targets: () => [{ key: 'pins', p: [PX, PY, .25], label: 'Pivot' }, { key: 'pins', p: [-HL / 2 + .35, 0, .25], label: 'Rear' }],
+        targets: () => [{ key: 'pins', p: [PX, PY, .2], label: 'Pivot' }, { key: 'pins', p: [-HL / 2 + .33, 0, .2], label: 'Rear' }],
         onHit(t, n) { const w = P.pins.wp(t.p); sparks(w, 8); sfx('anvil'); camImpulse(.3); if (n >= 2) puff(w, [.4, .4, .42], 2, { a: .3 }); },
         complete() { I().hide('pins'); stage({ layout: 'parts' }); }
       }),
@@ -120,7 +147,7 @@ export default {
         stage: () => stage({ home: ['handle', 'blade', 'ring'] }), canTurn: true,
         parts: ['handle', 'blade', 'ring'], layer: 'finish', mode: 'add', amt: .5, rad: .42, fx: 'stain', snd: 'soap', req: .8,
         complete() { I().home('pins', .3); sfx('anvil'); },
-        tut: { title: 'Oil and rivet', body: 'Brush the oil over the metal. It settles dark into the pits while the high spots stay bright, giving a Damascus-like pattern.', demo() { return { type: 'scrub', pts: [lp('handle', [-1.4, 0, .27]), lp('handle', [1.2, 0, .27])] }; } }
+        tut: { title: 'Oil and rivet', body: 'Brush the oil over the metal. It settles dark into the pits while the high spots stay bright, giving a Damascus-like pattern.', demo() { return { type: 'scrub', pts: [lp('handle', [-1.4, 0, ZO]), lp('handle', [1.2, 0, ZO])] }; } }
       }),
       cycle({
         id: 'fold', name: 'Flick It Open', hint: 'Swing the blade open, then fold it shut. Do it twice.', done: 'Folds like new', key: 'blade', tip: [-BL * .9, 0, 0], cycles: 2, cam: { preset: 'full' }, openLabel: 'Open', closeLabel: 'Fold', openSnd: 'latch', closeSnd: 'latch',

@@ -71,13 +71,14 @@ export function setView(v = {}, instant) {
   const preset = v.preset || 'full', hq = homeQuat(), fl = new THREE.Quaternion().setFromAxisAngle(turnAxis(), Math.round(RIG.flip / Math.PI) * Math.PI);
   const rootQ = hq.clone().multiply(fl);
   let c, r;
-  if (v.focus) {
+  /* design rule: every step frames the whole object (no close-ups that crop it); focus/r hints are ignored */
+  if (v.focus && v.closeup) {
     let lp; if (typeof v.focus === 'string') { const p = it.parts[v.focus]; lp = p.home.pos.clone().add(p.center ? p.center.clone().applyQuaternion(p.home.quat).multiplyScalar(p.home.scl) : new THREE.Vector3()); if (p.state === 'layout') lp = p.g.position.clone().add(p.center.clone().applyQuaternion(p.g.quaternion).multiplyScalar(p.g.scale.x)); }
     else lp = new THREE.Vector3(...v.focus);
     c = lp.multiplyScalar(it.root.scale.x).applyQuaternion(rootQ).add(STAGE).add(RIG.off);
     r = v.r || (preset === 'macro' ? 1.2 : 2.4);
   } else {
-    const b = fitBox(); c = b.c; r = (v.r || b.r) * (preset === 'show' ? 1.08 : 1);
+    const b = fitBox(); c = b.c; r = b.r * (preset === 'show' ? 1.08 : 1);
   }
   if (preset === 'full' || preset === 'show') r = Math.max(r, 1.5);
   const vf = R.camera.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * R.camera.aspect), f = Math.min(vf, hf);
