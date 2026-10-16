@@ -113,10 +113,10 @@ export default {
         stage: () => stage({ home: ['body'], tray: ['levers', 'shackle', 'face'] })
       }),
       timing({
-        id: 'rivets', name: 'Peen the Rivets', tool: 'hammer', hint: 'Strike each rivet when the needle is in the green.', done: 'Riveted tight', chip: 'Rivets', label: 'Strike in the green', speed: 2.6, win: .22, cam: { preset: 'full' },
+        id: 'rivets', name: 'Peen the Rivets', tool: 'hammer', hint: 'Tap each rivet to peen it shut.', done: 'Riveted tight', chip: 'Rivets', label: 'Strike in the green', speed: 2.6, win: .22, cam: { preset: 'full' },
         targets: () => [0, 2, 4, 6].map(i => ({ key: 'face', p: [RIVETS[i][0], RIVETS[i][1], .06] })),
         onHit(t) { glints(I().parts.face.wp(t.p), 3, .1); },
-        tut: { title: 'Peen on the beat', body: 'Watch the needle swing across the gauge. Tap when it passes through the green to land a clean hammer blow on the rivet.' }
+        tut: { title: 'Peen the rivets', body: 'Tap each glowing rivet. The hammer mushrooms it down and locks the case shut.' }
       }),
       cycle({
         id: 'test', name: 'Key Test', hint: 'Drag the key to turn it: the shackle springs open. Close it again, twice.', done: 'It works with its original key!', key: 'shackle', tip: [LEG, R + .55, 0], cycles: 2, cam: { preset: 'full' }, openSnd: 'latch', closeSnd: 'latch',

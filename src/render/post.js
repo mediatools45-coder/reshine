@@ -86,11 +86,13 @@ void main(){
     }
   }
   vec3 col=acc/wt;
-  /* grade (linear HDR, before tone mapping): gentle saturation, cool shadows, warm highlights, soft contrast */
+  /* grade (linear HDR, before tone mapping): night look: moonlit blue shadows, warm lamp highlights,
+     a contrast curve pivoting on mid grey so the lit object pops off the dark room */
   float lum=dot(col,vec3(.2126,.7152,.0722));
-  col=max(vec3(0.),mix(vec3(lum),col,1.08));
-  col*=mix(vec3(.95,.99,1.06),vec3(1.05,1.,.95),smoothstep(.02,.9,lum));
-  col=col*col/(col+vec3(.012))*1.02;
+  col=max(vec3(0.),mix(vec3(lum),col,1.1));
+  col*=mix(vec3(.84,.93,1.16),vec3(1.07,1.,.92),smoothstep(.01,.6,lum));
+  col=.18*pow(col/.18,vec3(1.16));
+  col=col*col/(col+vec3(.01));
   vec2 d=vUv-.5; float v=smoothstep(.32,.95,length(d*vec2(1.,1.12)));
   col*=1.-v*uVig;
   float g=h(vUv*vec2(913.,777.)+fract(uTime)*91.)-.5; col*=1.+g*.06;
@@ -100,7 +102,7 @@ class DofPass extends Pass {
   constructor() {
     super();
     this.mat = new THREE.ShaderMaterial({
-      uniforms: { tColor: { value: null }, tDepth: { value: null }, uPx: { value: new THREE.Vector2() }, uNear: { value: .1 }, uFar: { value: 100 }, uFocus: { value: 10 }, uRange: { value: 2 }, uMaxR: { value: 7 }, uTime: { value: 0 }, uVig: { value: .55 } },
+      uniforms: { tColor: { value: null }, tDepth: { value: null }, uPx: { value: new THREE.Vector2() }, uNear: { value: .1 }, uFar: { value: 100 }, uFocus: { value: 10 }, uRange: { value: 2 }, uMaxR: { value: 7 }, uTime: { value: 0 }, uVig: { value: .72 } },
       vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }', fragmentShader: DOF_FS, depthTest: false, depthWrite: false
     });
     this.quad = new FullScreenQuad(this.mat);

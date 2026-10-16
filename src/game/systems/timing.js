@@ -9,14 +9,14 @@ import { glass, mat, metal, cyl, box, rbox, mesh, lathe, torus, plastic } from '
 import { BENCH_Y } from '../../render/studio.js';
 import { I, toast, worldScale, lp, base, toolName, FX, facing, stage } from './common.js';
 
-/* ============ 15. timing: a needle sweeps a gauge; tap while it is in the green window ============
+/* ============ 15. timing → steady strikes: tap each marked point; every tap lands (no gauge, no misses) ============
    o.targets(): [{key, p, label}] (worked in order)  o.hits: good hits per target  o.speed  o.win: window width
    o.onHit(t, n) on a good hit, o.onMiss()  o.label: gauge caption  o.strike: animate the tool */
 export function timing(o) {
-  return base({ kind: 'timing', grabAll: true, anywhere: true, lockRig: true, input: 'Tap on time', ...o, toolLabel: o.toolLabel || toolName(o.tool || 'hammer'),
+  return base({ kind: 'timing', grabAll: true, anywhere: true, lockRig: true, input: 'Tap', ...o, toolLabel: o.toolLabel || toolName(o.tool || 'hammer'),
     enter() {
       this.list = o.targets().map(t => ({ hits: 0, need: o.hits || 1, done: false, ...t })); this.t = Math.random() * 6; this.busyT = 0;
-      const w = o.win || .2; this.lo = .5 - w / 2; this.hi = .5 + w / 2; G.meter = { v: 0, lo: this.lo, hi: this.hi, label: o.label || 'Strike in the green' };
+      G.meter = null;
       G.chips = [{ label: o.chip || 'Strikes', get: () => this.prog }]; if (o.enter) o.enter.call(this);
     },
     cur() { return this.list.find(t => !t.done); },
@@ -25,12 +25,11 @@ export function timing(o) {
     update(dt) {
       if (this.fin) { G.meter = null; return; }
       this.t += dt * (o.speed || 2.4) * (1 + (this.list.filter(x => x.done).length) * .06); this.busyT = Math.max(0, this.busyT - dt);
-      if (G.meter) G.meter.v = .5 + .5 * Math.sin(this.t);
       const c = this.cur(); if (c && !G.down) { T.goal.copy(this.pos(c)).add(new THREE.Vector3(0, .05, 0)); T.goalVis = 1; T.goalLift = .45 * T.scale; T.aimT = performance.now(); }
     },
     onDown() {
       const t = this.cur(); if (!t || this.busyT > 0 || this.fin) return; this.busyT = .25;
-      const v = G.meter ? G.meter.v : .5, good = v >= this.lo && v <= this.hi;
+      const good = true;
       const fire = () => {
         const p = this.pos(t);
         if (good) { t.hits++; sfx(o.snd || 'anvil'); sparks(p, 10); camImpulse(.35); vib(20); if (o.onHit) o.onHit.call(this, t, t.hits); if (t.hits >= t.need) { t.done = true; glints(p, 6, .2); if (o.onDone) o.onDone.call(this, t); } }

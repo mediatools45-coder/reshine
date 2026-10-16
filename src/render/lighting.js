@@ -25,16 +25,16 @@ export function initLighting(renderer, scene) {
     const tex = new THREE.DataTexture(data.data, data.width, data.height, THREE.RGBAFormat, data.type);
     tex.mapping = THREE.EquirectangularReflectionMapping; tex.colorSpace = THREE.LinearSRGBColorSpace; tex.flipY = false; tex.needsUpdate = true;
     const pm = new THREE.PMREMGenerator(renderer); const env = pm.fromEquirectangular(tex).texture; pm.dispose(); tex.dispose();
-    scene.environment = env; L.envTex = env; scene.environmentIntensity = .7; scene.environmentRotation = new THREE.Euler(0, 2.2, 0);
+    scene.environment = env; L.envTex = env; scene.environmentIntensity = .42; scene.environmentRotation = new THREE.Euler(0, 2.2, 0);
   } catch (e) { console.warn('HDRI fallback', e); }
-  /* small sky/ground fill so shadowed sides never go flat black */
-  L.hemi = new THREE.HemisphereLight(0xd8d4c8, 0x3a2614, .3); scene.add(L.hemi);
-  const key = new THREE.DirectionalLight(0xffe4c4, 2.1); key.castShadow = true;
+  /* night: a faint moonlit fill keeps shadow sides readable without flattening the contrast */
+  L.hemi = new THREE.HemisphereLight(0x8ea4d8, 0x2a1a10, .18); scene.add(L.hemi);
+  const key = new THREE.DirectionalLight(0xffd6a8, 2.6); key.castShadow = true;
   key.shadow.mapSize.set(1024, 1024); const sc = key.shadow.camera; sc.left = -8; sc.right = 8; sc.top = 8; sc.bottom = -8; sc.near = 1; sc.far = 40;
   key.shadow.bias = -.0004; key.shadow.normalBias = .03;
   scene.add(key, key.target); L.key = key;
-  L.rim = new THREE.DirectionalLight(0xbfd4ff, 1.3); L.rim.position.set(6, 5, -9); scene.add(L.rim);
-  L.kick = new THREE.DirectionalLight(0xffc896, .5); L.kick.position.set(9, 1.5, 5); scene.add(L.kick);
+  L.rim = new THREE.DirectionalLight(0x9ab8ff, 1.9); L.rim.position.set(6, 5, -9); scene.add(L.rim);
+  L.kick = new THREE.DirectionalLight(0x7f9cff, .35); L.kick.position.set(9, 1.5, 5); scene.add(L.kick);
   /* lights must reach both the sharp layer and the blurred backdrop layer */
   for (const l of [L.hemi, key, L.rim, L.kick]) l.layers.enableAll();
 }

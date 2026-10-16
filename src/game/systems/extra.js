@@ -9,7 +9,7 @@ import { glass, mat, metal, cyl, box, rbox, mesh, lathe, torus, plastic } from '
 import { BENCH_Y } from '../../render/studio.js';
 import { I, toast, worldScale, lp, base, toolName, FX, facing, stage } from './common.js';
 
-/* ============ 16. tune: turn each peg in circles until the tuner needle sits in the green ============
+/* ============ 16. tune: circle each peg; the needle glides to the centre and the string rings in tune ============
    o.pegs(): [{key, p, label, start, freq}]  o.onTurn(peg, d)  o.onTuned(peg) */
 export function tune(o) {
   return base({ kind: 'tune', grabAll: true, anywhere: true, lockRig: true, input: 'Circle', tool: 'hand', ...o, toolLabel: o.toolLabel || 'Tuning Pegs',
@@ -21,14 +21,15 @@ export function tune(o) {
     onDown(hit, ray, r) { const p = this.cur(); if (p) this.last = this.ang(r, p); },
     onMove(hit, ray, r) {
       const p = this.cur(); if (!p || this.last == null) return; const a = this.ang(r, p); let d = a - this.last; if (d > Math.PI) d -= Math.PI * 2; else if (d < -Math.PI) d += Math.PI * 2; this.last = a;
-      p.v = clamp(p.v + d * .045, 0, 1); if (o.onTurn) o.onTurn.call(this, p, d); sfx('ratchet', 120);
+      /* any circling brings the string toward pitch: it never overshoots, so tuning always feels calm */
+      const k = Math.min(Math.abs(d) * .05, Math.abs(p.v - .5)); p.v += Math.sign(.5 - p.v) * k; if (o.onTurn) o.onTurn.call(this, p, d); sfx('ratchet', 120);
       if (Math.random() < .25) sfx('pluckf', 160, (p.freq || 196) * Math.pow(2, (p.v - .5) * .6));
     },
     onUp() { this.last = null; },
     update(dt) {
       const p = this.cur(); if (!p) { G.meter = null; return; }
       if (G.meter) { G.meter.v += (p.v - G.meter.v) * Math.min(1, dt * 10); G.meter.label = (p.label || 'String') + ': tune to the centre'; }
-      if (Math.abs(p.v - .5) < .05) { p.hold += dt; if (p.hold > .45) { p.done = true; sfx('pluckf', 0, p.freq || 196); glints(this.pos(p), 6, .2); if (o.onTuned) o.onTuned.call(this, p); this.last = null; } } else p.hold = 0;
+      if (Math.abs(p.v - .5) < .03) { p.hold += dt; if (p.hold > .2) { p.done = true; sfx('pluckf', 0, p.freq || 196); glints(this.pos(p), 6, .2); if (o.onTuned) o.onTuned.call(this, p); this.last = null; } } else p.hold = 0;
       this.prog = this.list.filter(x => x.done).length / this.list.length;
       if (this.list.every(x => x.done) && !this.fin) { this.fin = true; G.meter = null; sfx('strum'); later(600, () => finishStep()); }
     },
@@ -39,11 +40,11 @@ export function tune(o) {
   });
 }
 
-/* ============ 17. strokes: long strokes along a guide while keeping an angle gauge in the green (whetstone) ============
+/* ============ 17. strokes: long relaxed strokes along a guide (whetstone); every full stroke counts ============
    o.a(), o.b(): world end points of the stroke  o.strokes: how many good strokes  o.onStroke(k) */
 export function strokes(o) {
   return base({ kind: 'strokes', grabAll: true, anywhere: true, lockRig: true, input: 'Long strokes', ...o, toolLabel: o.toolLabel || toolName(o.tool || 'stone'),
-    enter() { this.n = 0; this.d0 = null; this.good = 0; this.tot = 0; this.wob = Math.random() * 6; G.meter = { v: .5, lo: .36, hi: .64, label: o.label || 'Hold the angle' }; G.chips = [{ label: o.chip || 'Strokes', get: () => this.prog }]; if (o.enter) o.enter.call(this); },
+    enter() { this.n = 0; this.d0 = null; this.good = 0; this.tot = 0; this.wob = Math.random() * 6; G.meter = null; G.chips = [{ label: o.chip || 'Strokes', get: () => this.prog }]; if (o.enter) o.enter.call(this); },
     nodes() { const it = I(); return Object.values(it.parts).filter(p => p.g.visible).flatMap(p => p.meshes); },
     seg() { const a = project(o.a()), b = project(o.b()); return { ax: a.x, ay: a.y, bx: b.x, by: b.y }; },
     onDown(hit, ray, r) { this.d0 = { s: this.seg(), t0: null }; this.track(r); },
@@ -51,8 +52,7 @@ export function strokes(o) {
     track(r) {
       const s = this.d0.s, vx = s.bx - s.ax, vy = s.by - s.ay, L = Math.hypot(vx, vy) || 1, t = ((r.x - s.ax) * vx + (r.y - s.ay) * vy) / (L * L), off = ((r.x - s.ax) * vy - (r.y - s.ay) * vx) / L;
       /* the angle drifts on its own; the finger's sideways offset corrects it */
-      this.wob += .05; const ang = clamp(.5 + off / 140 + Math.sin(this.wob) * .12, 0, 1); if (G.meter) G.meter.v = ang;
-      const inZone = ang >= .36 && ang <= .64; this.tot++; if (inZone) this.good++;
+      this.tot++; this.good++;
       if (this.d0.t0 == null) { this.d0.t0 = t; this.d0.dir = 0; }
       const d = t - this.d0.t0;
       if (Math.abs(d) > .7) {

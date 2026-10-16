@@ -19,7 +19,7 @@ Source: `docs/video-steps.md` (245 steps across 6 videos). Rules:
 | 5 | Wire-wheel to bright steel | Scrub with the bench wire wheel | 8:05 |
 | 6 | Cold-blue the parts | Brush on bluing, then rub the high spots back to silver | 15:38–15:43 |
 | 7 | Refit the levers & spring | Drag the parts into their slots | 17:29 |
-| 8 | Peen the rivets shut | **NEW** timing: strike when the marker is in the sweet spot | 18:27 |
+| 8 | Peen the rivets shut | Tap each rivet (no timing gauge: every strike lands) | 18:27 |
 | 9 | Key test (+ before/after) | Turn the original key; the shackle springs open and snaps shut | 19:26 ★ |
 
 ## 2. Pocket Knife (105-year-old, rusted into one lump)
@@ -31,7 +31,7 @@ Source: `docs/video-steps.md` (245 steps across 6 videos). Rules:
 | 4 | Scrape the black scale | Scraper strokes peel large flakes | 2:49 |
 | 5 | Wire-wheel reveal | Grinder wire wheel; the black lump turns bright steel | 3:31 ★ |
 | 6 | Punch out the pins | Hammer + punch on each pin; the parts fall apart | 4:06 |
-| 7 | Sharpen the blade | **NEW** whetstone strokes, keeping the angle in the green band | 8:43 |
+| 7 | Sharpen the blade | **NEW** whetstone: long, relaxed strokes | 8:43 |
 | 8 | Forge a new bail ring | **NEW** heat the wire red-hot, then bend it around the anvil horn | 9:28–9:44 |
 | 9 | Oil & rivet back together (+ before/after) | Brush the dark oil finish, peen the pins, flick the blade open | 10:20–12:00 |
 
@@ -84,7 +84,7 @@ Source: `docs/video-steps.md` (245 steps across 6 videos). Rules:
 | 5 | Sand to bare wood | Orbital sander | 7:42 |
 | 6 | Spray metallic red | Primer pass, then candy-apple red + clear | 8:42 ★ |
 | 7 | Polish the pickup poles | Hold the felt wheel on each pole; rust turns to chrome | 4:37 |
-| 8 | Press in new frets | **NEW** timing: press each fret as the marker crosses the slot | 12:09 |
+| 8 | Press in new frets | Tap each slot to press a fret in | 12:09 |
 | 9 | String up & tune | **NEW** turn each peg until the tuner needle is centred | 15:22 |
 | 10 | Strum it (+ before/after) | Strum a chord | 15:44 |
 
@@ -94,10 +94,13 @@ Same rules apply: cut each to 8–10 steps, remove repeated cleaning passes, and
 ## Built (current game)
 | Level | Steps (incl. before/after) | New mechanics |
 |---|---|---|
-| Padlock | 10 | heat + twist key, chisel seam strikes, timing rivets, key test |
+| Padlock | 10 | heat + twist key, chisel seam strikes, rivet taps, key test |
 | Pocket Knife | 11 | seam trace with burr, scraper, whetstone strokes, forge + bend bail ring |
 | Alarm Clock | 10 | tweeze gears, citric swirl, braze holes with torch, wind & ring |
 | Keyboard | 10 | singe hairs, dishwasher load + run, peroxide/UV bath, LED polish |
 | Typewriter | 10 | pull typebars, rust-remover swirl, sandblast, laser logo, oil pivots |
-| Stratocaster | 11 | snip strings, stripper + scraper, metallic red, fret press timing, tuner |
-| Sword / Lighter / Watch / Pistol | 10–11 | repeats folded away (`keep` list); sword rivets use timing |
+| Stratocaster | 11 | snip strings, stripper + scraper, metallic red, fret press, tuner |
+| Sword / Lighter / Watch / Pistol | 10–11 | repeats folded away (`keep` list); sword rivets are tap-to-set |
+
+## Feel rule (QA pass)
+No step can be failed. The old timing gauge ("tap in the green") was removed because it created friction: rivets and frets are now plain taps. Whetstone strokes always count, and tuning pegs glide to pitch whichever way you circle.

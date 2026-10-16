@@ -1,6 +1,6 @@
 /* Workshop backdrop, drawn soft-focus behind the object (layer BG, see post.js):
-   a worn plank workbench, green board wall, a bright dusty window, one shelf unit with a few
-   props and a screwdriver rack. Deliberately sparse: shapes and warm light, not clutter.
+   a worn plank workbench, green board wall, a night window with moonlight, one shelf unit with a few
+   props, a screwdriver rack and a glowing bench lamp. Night theme: dark room, warm lamp pool, cool moon rim.
    The bench top is also on the sharp layer near the object so its shadow stays crisp. */
 import * as THREE from 'three';
 import { lathe, cyl, box, rbox, mesh, canvasTex } from '../assets/geo.js';
@@ -30,7 +30,7 @@ function wallTex() {
   return canvasTex(512, 512, (g, w, h) => {
     const r = rr(9), n = 8, bw = w / n;
     for (let i = 0; i < n; i++) {
-      const c = new THREE.Color('#3f5a45').offsetHSL((r() - .5) * .03, (r() - .5) * .1, (r() - .5) * .08); g.fillStyle = '#' + c.getHexString(); g.fillRect(i * bw, 0, bw, h);
+      const c = new THREE.Color('#2b4038').offsetHSL((r() - .5) * .03, (r() - .5) * .1, (r() - .5) * .08); g.fillStyle = '#' + c.getHexString(); g.fillRect(i * bw, 0, bw, h);
       g.fillStyle = 'rgba(10,15,10,.6)'; g.fillRect(i * bw, 0, 3, h);
       for (let k = 0; k < 40; k++) { g.fillStyle = `rgba(${r() < .5 ? '120,90,60' : '20,25,20'},${r() * .25})`; g.fillRect(i * bw + r() * bw, r() * h, 2 + r() * 10, 4 + r() * 40); }
     }
@@ -38,8 +38,10 @@ function wallTex() {
 }
 function windowTex() {
   return canvasTex(256, 256, (g, w, h) => {
-    const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#fff6e2'); gr.addColorStop(1, '#f2e0bc'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
-    const r = rr(5); for (let k = 0; k < 60; k++) { g.fillStyle = `rgba(150,130,100,${r() * .25})`; g.beginPath(); g.ellipse(r() * w, r() * h, 4 + r() * 20, 3 + r() * 12, r() * 3, 0, 7); g.fill(); }
+    const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#0b1430'); gr.addColorStop(.7, '#1d2f5a'); gr.addColorStop(1, '#34406a'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    const r = rr(5); for (let k = 0; k < 70; k++) { g.fillStyle = `rgba(255,255,240,${.3 + r() * .7})`; g.fillRect(r() * w, r() * h * .75, 1 + r() * 1.2, 1 + r() * 1.2); }
+    const m = g.createRadialGradient(w * .7, h * .25, 0, w * .7, h * .25, 60); m.addColorStop(0, 'rgba(255,250,225,1)'); m.addColorStop(.18, 'rgba(255,248,220,1)'); m.addColorStop(.22, 'rgba(170,190,255,.35)'); m.addColorStop(1, 'rgba(120,150,255,0)'); g.fillStyle = m; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#070b14'; g.beginPath(); g.moveTo(0, h); for (let x = 0; x <= w; x += 16) g.lineTo(x, h * .86 - Math.abs(Math.sin(x * .05)) * 16 - r() * 8); g.lineTo(w, h); g.fill();
   });
 }
 const onBG = o => { o.traverse(c => { c.layers.set(BG); if (c.isMesh) { c.castShadow = false; c.receiveShadow = true; } }); return o; };
@@ -61,14 +63,14 @@ export function buildStudio(scene) {
   /* back wall + window */
   const wall = mesh(box(40, 22, .4), new THREE.MeshStandardMaterial({ map: wallTex(), roughness: .9 }), { p: [0, Y + 9, -10] }); W.add(onBG(wall));
   const win = new THREE.Group(); win.position.set(-2.5, Y + 6.2, -9.7);
-  win.add(mesh(new THREE.PlaneGeometry(7, 5.4), new THREE.MeshBasicMaterial({ map: windowTex(), color: new THREE.Color(3.2, 2.9, 2.4) })));
+  win.add(mesh(new THREE.PlaneGeometry(7, 5.4), new THREE.MeshBasicMaterial({ map: windowTex(), color: new THREE.Color(1.6, 1.7, 2.1) })));
   const fr = M.wood('#5a3f26', .75, 0);
   for (const x of [-3.6, -1.2, 1.2, 3.6]) win.add(mesh(box(.28, 5.8, .3), fr, { p: [x, 0, .15] }));
   for (const y of [-2.8, 0, 2.8]) win.add(mesh(box(7.5, .28, .3), fr, { p: [0, y, .15] }));
   win.add(mesh(box(7.9, .3, .8), fr, { p: [0, -3.0, .4] }));
   W.add(onBG(win));
-  /* light spilling in from the window onto the bench and wall */
-  const sun = new THREE.SpotLight(0xffe2b8, 55, 26, .6, .9, 1.6); sun.position.set(-2.5, Y + 6, -8.5); sun.target.position.set(0, Y, 0); W.add(sun, sun.target); sun.layers.enableAll();
+  /* moonlight spilling in from the window onto the bench and wall */
+  const sun = new THREE.SpotLight(0x8fb0ff, 26, 26, .6, .9, 1.6); sun.position.set(-2.5, Y + 6, -8.5); sun.target.position.set(0, Y, 0); W.add(sun, sun.target); sun.layers.enableAll();
   /* shelf unit (right) with a few props */
   const sh = new THREE.Group(); sh.position.set(6.2, Y, -8.6); const sw = M.wood('#7a5534', .7, .1);
   for (const x of [-3, 0, 3]) sh.add(mesh(box(.25, 5, 2), sw, { p: [x, 2.5, 0] }));
@@ -89,8 +91,11 @@ export function buildStudio(scene) {
   const lamp = new THREE.Group(); lamp.position.set(-9.5, Y, -5); const lm = M.paint('#d8d2c4', .5);
   lamp.add(mesh(cyl(.9, 1, .3, 24), lm, { p: [0, .15, 0] })); lamp.add(mesh(cyl(.08, .08, 3.6, 10), lm, { p: [0, 1.9, 0] }));
   lamp.add(mesh(lathe([[.15, 0], [.5, .5], [1.0, 1.2, 1]], 24), lm, { p: [.6, 3.6, 0], r: [0, 0, -2.2] }));
+  lamp.add(mesh(new THREE.SphereGeometry(.32, 16, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(6, 4.2, 2.2) }), { p: [1.15, 3.1, 0] }));
   W.add(onBG(lamp));
-  const warm = new THREE.PointLight(0xffb070, 18, 16, 1.8); warm.position.set(4, Y + 4, -6); W.add(warm); warm.layers.enableAll();
+  /* the lamp's warm glow in the room, plus a dim amber practical on the shelf */
+  const glow = new THREE.PointLight(0xffa860, 30, 14, 1.8); glow.position.set(-8.2, Y + 3, -4.6); W.add(glow); glow.layers.enableAll();
+  const warm = new THREE.PointLight(0xffb070, 7, 14, 1.8); warm.position.set(4, Y + 4, -6); W.add(warm); warm.layers.enableAll();
   return W;
 }
 /* keep the sharp-bench fade centred on the object */

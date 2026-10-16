@@ -102,11 +102,11 @@ export default {
         complete() { I().hide('pins'); stage({ layout: 'parts' }); }
       }),
       strokes({
-        id: 'sharpen', name: 'Sharpen the Blade', tool: 'stone', hint: 'Make long strokes along the edge while keeping the angle needle in the green.', done: 'Razor sharp', strokes: 6, label: 'Hold the angle', cam: { preset: 'full' },
+        id: 'sharpen', name: 'Sharpen the Blade', tool: 'stone', hint: 'Make long, slow strokes along the edge.', done: 'Razor sharp', strokes: 6, label: 'Hold the angle', cam: { preset: 'full' },
         stage: () => stage({ hide: ['handle'], layout: 'blade' }),
         a: () => lp('blade', [-.3, .22, .03]), b: () => lp('blade', [-BL * .9, .12, .03]),
         onStroke(k) { const s = P.blade.surf; for (let i = 0; i < 8; i++) { const x = -.3 - i / 7 * (BL * .6); s.dab(new THREE.Vector3(x, .25, .03), new THREE.Vector3(0, 0, 1), .14, 'polish', 'add', .5 * k + .2); } },
-        tut: { title: 'Whetstone strokes', body: 'Drag along the blade edge in long strokes. The angle drifts as you go: move your finger slightly up or down to keep the needle in the green.' }
+        tut: { title: 'Whetstone strokes', body: 'Drag along the blade edge in long, slow strokes. Each pass hones the edge a little brighter.' }
       }),
       heat({
         id: 'ring', name: 'Forge a New Bail Ring', hint: 'Heat the wire until it glows, then circle to bend it round.', done: 'New ring forged', time: 1.4, cam: { preset: 'full' },

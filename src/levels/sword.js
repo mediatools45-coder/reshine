@@ -145,11 +145,11 @@ export default {
       }),
       snap({ id: 'attach', name: 'Reattach the Handle', hint: 'Carry the grip to the glowing outline on the tang.', done: 'Handle seated', keys: ['grip'], cam: { preset: 'full' }, thr: 1.1 }),
       timing({
-        id: 'secure', name: 'Hammer the Rivets Home', tool: 'hammer', hint: 'Strike each brass rivet when the needle is in the green.', done: 'Rivets set', hits: 2, chip: 'Rivets', label: 'Strike in the green', speed: 2.5, win: .22, cam: { preset: 'work', focus: [-1.4, 0, 0], r: 1.9 },
+        id: 'secure', name: 'Hammer the Rivets Home', tool: 'hammer', hint: 'Tap each brass rivet to hammer it flush.', done: 'Rivets set', hits: 2, chip: 'Rivets', label: 'Strike in the green', speed: 2.5, win: .22, cam: { preset: 'work', focus: [-1.4, 0, 0], r: 1.9 },
         enter() { for (const i of RIV) { const b = P()['brass' + i]; b.g.visible = true; b.state = 'home'; b.g.position.copy(b.home.pos).add(new THREE.Vector3(0, 0, .36)); } },
         targets: () => RIV.map(i => ({ key: 'brass' + i, p: [0, 0, .32] })),
         onHit(t, n) { const b = P()[t.key]; camImpulse(.4); sfx('clink'); b.g.position.z = b.home.pos.z + .36 * (1 - n / 2); const w = b.wp([0, 0, .3]); sparks(w, 6); if (n >= 2) { sfx('ping'); glints(w, 5, .12); } },
-        tut: { title: 'Set the new rivets', body: 'Fresh brass rivets sit in the holes. Watch the needle and strike when it crosses the green to drive each rivet flush.' }
+        tut: { title: 'Set the new rivets', body: 'Fresh brass rivets sit in the holes. Tap each one and the hammer drives it flush.' }
       }),
       paint({
         id: 'final', name: 'Final Polish', tool: 'micro', input: 'Wipe', hint: 'Wipe away dust and fingerprints from the whole sword.', done: 'Showroom finish', cam: { preset: 'full' },
