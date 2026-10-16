@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { R, raycast, rayAt, project } from '../render/engine.js';
 import { aimLights } from '../render/lighting.js';
-import { updateStudio } from '../render/studio.js';
+import { updateStudio, BENCH_Y } from '../render/studio.js';
 import { T, setTool, toolAim, updateTool } from '../assets/tools.js';
 import { sfx, setLoop } from '../fx/audio.js';
 import { glints, clearParticles, P as PART } from '../fx/particles.js';
@@ -86,6 +86,16 @@ export function setView(v = {}, instant) {
   RIG.spin = preset === 'show' ? .25 : 0;
   if (instant || clock.ff) { CAM.t.copy(CAM.gt); CAM.dist = CAM.gdist; CAM.el = CAM.gel; CAM.az = CAM.gaz; }
 }
+/* a laid-out part must rest on (not in) the workbench: lift its goal if its lowest corner would sink below the bench top */
+Item.restFix = (p, pos, q, scl) => {
+  const it = G.item; if (!it || !p.bb || p.bb.isEmpty()) return;
+  const hq = homeQuat().multiply(new THREE.Quaternion().setFromAxisAngle(turnAxis(), Math.round(RIG.flip / Math.PI) * Math.PI)), rs = it.root.scale.x;
+  const m = new THREE.Matrix4().compose(STAGE.clone().add(G.offGoal || RIG.off), hq, it.root.scale.clone()).multiply(new THREE.Matrix4().compose(pos, q, new THREE.Vector3(scl, scl, scl)));
+  let minY = Infinity; const b = p.bb, v = new THREE.Vector3();
+  for (let i = 0; i < 8; i++) { v.set(i & 1 ? b.max.x : b.min.x, i & 2 ? b.max.y : b.min.y, i & 4 ? b.max.z : b.min.z).applyMatrix4(m); minY = Math.min(minY, v.y); }
+  const floor = BENCH_Y + .04; if (minY >= floor) return;
+  pos.add(new THREE.Vector3(0, (floor - minY) / rs, 0).applyQuaternion(hq.clone().invert()));
+};
 function fitBox() {
   const it = G.item, bb = new THREE.Box3(), hq = homeQuat().multiply(new THREE.Quaternion().setFromAxisAngle(turnAxis(), Math.round(RIG.flip / Math.PI) * Math.PI));
   const m = new THREE.Matrix4().compose(STAGE.clone().add(G.offGoal || RIG.off), hq, it.root.scale.clone());
@@ -225,7 +235,7 @@ export function endTool() { const s = st(); G.down = false; T.spinning = false; 
 export function updateGame(dt) {
   updateRig(dt); updateCam(dt);
   const s = st();
-  if (G.item) { G.item.update(dt); G.item.updateTray(dt, R.camera); }
+  if (G.item) { G.item.update(dt); const s = st(); G.item.updateTray(dt, R.camera, k => !!(s && s.kind === 'snap' && s.items && s.items.some(x => x.key === k && !x.done))); }
   if (G.before) G.before.update(dt);
   if (s && G.mode === 'play' && !G.paused) { try { s.update && s.update(dt); } catch (e) { console.error(e); } if (st() === s) autoFinish(s, dt); }
   /* idle tool pose: rest the tool near the work */

@@ -59,7 +59,7 @@ export default {
     it.extra.chunks.push(...chunksOn(it, 'body', 2, { size: .26, filter: (p, n) => Math.abs(n.x) > .6 }), ...chunksOn(it, 'shackle', 2, { size: .2, filter: p => p.y > R + .6 }));
   },
   layouts: {
-    parts: centered({ body: { c: [0, 1.15, 0], s: .78 }, face: { c: [-1.75, -1.45, .2], s: .62 }, levers: { c: [.15, -1.75, .3], s: .7 }, shackle: { c: [1.85, -1.2, .2], r: [0, 0, -.3], s: .55 }, key: { c: [1.9, 1.35, .4], r: [-1.3, 0, .4], s: .85 } }),
+    parts: centered({ body: { c: [0, 1.15, 0], s: .78 }, face: { c: [-2.15, -1.55, .2], s: .58 }, levers: { c: [.1, -1.85, .3], s: .7 }, shackle: { c: [2.2, -1.35, .2], r: [0, 0, -.3], s: .52 }, key: { c: [2.3, 1.55, .4], r: [-1.3, 0, .4], s: .8 } }),
     open: centered({ face: { c: [2.9, .2, .4], r: [0, -.5, 0], s: .8 } })
   },
   steps(it) {
