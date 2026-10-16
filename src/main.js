@@ -18,6 +18,9 @@ const persist = () => store.setJson(SAVE_KEY, save);
 if (!save._v3) { for (const k in save) if (save[k] && typeof save[k] === 'object') save[k].step = 0; save._v3 = 1; save._v2 = 1; store.setJson(SAVE_KEY, save); }
 if (!save._v2) { if (save.padlock && save.padlock.step > 0) save.padlock.step--; save._v2 = 1; store.setJson(SAVE_KEY, save); }
 const qs = new URLSearchParams(location.search);
+/* split build: this page holds one level; "back" goes to the launcher page (index.html) next to it */
+const SPLIT = typeof __SPLIT__ !== 'undefined' && __SPLIT__;
+const toLauncher = () => { location.href = 'index.html'; };
 let tickKeys = () => { };
 /* default tier: phones/tablets and low-core machines start on medium, everything else on high; ultra only by choice */
 const weak = matchMedia('(pointer:coarse)').matches || (navigator.hardwareConcurrency || 4) <= 4 || (navigator.deviceMemory || 8) <= 4;
@@ -45,6 +48,7 @@ function boot() {
   window.__g = { P, gallery, auto, G, RIG, CAM, T, R, LEVELS, openLevel, startLevel, ff, skipStep, finishStep, enterStep, st, save, setQuality: applyQuality, toShop, clock, setView, THREE, BENCH_Y, thumbs: () => Object.fromEntries(LEVELS.map(d => [d.id, d.thumb])) };
   resize(dprCap * res);
   requestAnimationFrame(frame);
+  if (SPLIT) { $('btnShop').textContent = 'Back to All Relics'; $('mShop').textContent = 'Back to All Relics'; $('load').classList.remove('on'); $('shop').classList.remove('on'); openLevel(LEVELS[0].id); return; }
   makeThumbs().then(() => { $('load').classList.remove('on'); buildShop(); G.mode = 'shop'; if (qs.get('level')) openLevel(qs.get('level')); });
 }
 
@@ -90,6 +94,7 @@ function buildShop() {
   const done = LEVELS.filter(d => (save[d.id] || {}).restored).length; $('shopSub').textContent = done ? `${done} of ${list.length} relics restored` : 'Pick any relic to bring back to life';
 }
 function toShop() {
+  if (SPLIT) { toLauncher(); return; }
   endGuide(); cancelAll(); setLoop(null); resetPointers();
   G.mode = 'shop'; document.body.className = 'shop'; $('done').classList.remove('on'); $('intro').classList.remove('on'); $('shop').classList.add('on'); $('cmp').classList.add('hide');
   R.cmp = null; setTool(null); buildShop(); if (G.item) { RIG.spin = .25; setView({ preset: 'show' }); }
