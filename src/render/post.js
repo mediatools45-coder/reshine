@@ -118,9 +118,10 @@ class DofPass extends Pass {
 
 
 /* clamps extreme specular peaks (a mirror face catching the key light reads 100+): keeps polished
-   metal bright but stops it flooding the bloom and washing the whole frame white */
+   metal bright but stops it flooding the bloom and washing the whole frame white. It also scrubs NaN/Inf
+   pixels (some GPUs produce a few): blurred by bloom, a single one can black out the whole screen. */
 class ClampPass extends Pass {
-  constructor(max) { super(); this.q = new FullScreenQuad(new THREE.ShaderMaterial({ uniforms: { tMap: { value: null }, uMax: { value: max } }, vertexShader: VS, fragmentShader: 'uniform sampler2D tMap; uniform float uMax; varying vec2 vUv; void main(){ vec3 c=texture2D(tMap,vUv).rgb; float m=max(c.r,max(c.g,c.b)); gl_FragColor=vec4(c*min(1.,uMax/max(m,1e-4)),1.); }', depthTest: false, depthWrite: false })); }
+  constructor(max) { super(); this.q = new FullScreenQuad(new THREE.ShaderMaterial({ uniforms: { tMap: { value: null }, uMax: { value: max } }, vertexShader: VS, fragmentShader: 'uniform sampler2D tMap; uniform float uMax; varying vec2 vUv; void main(){ vec3 c=texture2D(tMap,vUv).rgb; if(any(isnan(c))||any(isinf(c))) c=vec3(uMax*.5); c=max(c,vec3(0.)); float m=max(c.r,max(c.g,c.b)); gl_FragColor=vec4(c*min(1.,uMax/max(m,1e-4)),1.); }', depthTest: false, depthWrite: false })); }
   render(renderer, writeBuffer, readBuffer) { this.q.material.uniforms.tMap.value = readBuffer.texture; renderer.setRenderTarget(this.renderToScreen ? null : writeBuffer); this.q.render(renderer); }
 }
 export function initPost(renderer) {

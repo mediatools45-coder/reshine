@@ -37,7 +37,17 @@ export function setQuality(q) {
   const k = R.key; if (k && k.shadow.mapSize.x !== t.shadow) { k.shadow.mapSize.set(t.shadow, t.shadow); if (k.shadow.map) { k.shadow.map.dispose(); k.shadow.map = null; } }
   for (const rt of [R.composer.renderTarget1, R.composer.renderTarget2]) if (rt.samples !== t.msaa) { rt.samples = t.msaa; rt.dispose(); }
 }
-export function render() { R.composer.render(); }
+/* R.safe: plain forward render (no post-processing), the fallback when the effect chain shows nothing on a GPU */
+export function render() {
+  if (!R.safe) { R.composer.render(); return; }
+  const c = R.camera, m = c.layers.mask; c.layers.enableAll(); R.renderer.setRenderTarget(null); R.renderer.setClearColor(0x0c0a08, 1); R.renderer.render(R.scene, c); c.layers.mask = m;
+}
+/* average brightness (0..255) of a few pixels of the frame just drawn; must be called right after render() */
+export function probeFrame() {
+  const gl = R.renderer.getContext(), w = gl.drawingBufferWidth, h = gl.drawingBufferHeight, px = new Uint8Array(4); let sum = 0, n = 0;
+  for (const [fx, fy] of [[.5, .5], [.3, .4], [.7, .4], [.5, .7], [.2, .8], [.8, .2]]) { gl.readPixels(Math.floor(w * fx), Math.floor(h * fy), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); sum += px[0] + px[1] + px[2]; n += 3; }
+  return sum / n;
+}
 export function project(v) {
   const p = v.clone().project(R.camera); return { x: (p.x * .5 + .5) * R.W, y: (1 - (p.y * .5 + .5)) * R.H, z: p.z, ok: p.z < 1 && p.z > -1 };
 }

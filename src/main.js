@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { R, initEngine, resize, render, setQuality, project, TIERS } from './render/engine.js';
+import { R, initEngine, resize, render, setQuality, project, TIERS, probeFrame } from './render/engine.js';
 import { buildStudio, BENCH_Y } from './render/studio.js';
 import { initParticles, updateParticles, confetti, glints, clearParticles, P } from './fx/particles.js';
 import { initTools, setTool, T, makeTool } from './assets/tools.js';
@@ -100,7 +100,7 @@ function toShop() {
   R.cmp = null; setTool(null); buildShop(); if (G.item) { RIG.spin = .25; setView({ preset: 'show' }); }
 }
 function openLevel(id) {
-  const def = LEVELS.find(d => d.id === id); if (!def) return;
+  const def = LEVELS.find(d => d.id === id); if (!def) return; probeOk = 0;
   loadLevel(def); G.mode = 'intro'; document.body.className = 'intro'; $('shop').classList.remove('on'); $('intro').classList.add('on');
   $('inName').textContent = def.name; $('inMeta').textContent = `${def.complexity} · ${G.steps.length} steps · ${def.minutes}`;
   $('inDesc').textContent = def.intro || def.blurb || '';
@@ -152,7 +152,18 @@ function auto() {
   return out;
 }
 /* ---------- loop ---------- */
-let shopSkip = 0;
+let shopSkip = 0, probeN = 0, blackN = 0, probeOk = 0;
+/* safety net for GPUs where the effect chain renders nothing: sample the frame now and then while an object is on
+   screen; if it stays pure black, drop to the lowest tier, then to plain rendering without post-processing */
+function blackCheck() {
+  if (!G.item || (G.mode !== 'play' && G.mode !== 'intro') || R.safe || probeOk >= 6 || qs.get('noprobe')) return;
+  if (++probeN % 45 !== 0) return;
+  let v = 255; try { v = probeFrame(); } catch (e) { return; }
+  if (v > 1.5) { blackN = 0; probeOk++; return; } /* a few good frames per level are proof enough: stop reading pixels */
+  if (++blackN < 2) return; blackN = 0;
+  if (qCap > 0) { console.warn('black frame: dropping to low effects'); applyQuality(0); }
+  else { console.warn('black frame: plain rendering'); R.safe = true; }
+}
 function frame(ts) {
   requestAnimationFrame(frame);
   const raw = (ts - lastTs) / 1000 || .016;
@@ -176,6 +187,7 @@ function frame(ts) {
   else { R.cmp = null; if (G.item) G.item.root.visible = true; if (G.before) G.before.root.visible = false; }
   updateParticles(dt, R.camera, R.H * R.dpr);
   render();
+  blackCheck();
   if (G.item && R.cmp) { G.item.root.visible = true; G.before.root.visible = false; }
   updateUI(dt);
 }

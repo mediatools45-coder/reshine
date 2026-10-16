@@ -1,7 +1,7 @@
 /* plays every step with real pointer gestures (no skip unless a step stalls) */
 import { chromium } from 'playwright-core';
 import fs from 'fs';
-const OUT = 'test/out'; fs.mkdirSync(OUT, { recursive: true });
+const OUT = 'test/out'; fs.mkdirSync(OUT + '/play', { recursive: true });
 const args = process.argv.slice(2), only = args.filter(a => !a.startsWith('--')), shots = args.includes('--shots');
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: 400, height: 780 }, deviceScaleFactor: 1 });
@@ -56,6 +56,7 @@ for (const id of ids) {
       if (!a || cur !== step) break;
       if (a.busy) { await sleep(300); continue; }
       await act(a); tries++; await sleep(350);
+      if (shots && tries === 1) await page.screenshot({ path: `${OUT}/play/${id}_${String(i + 1).padStart(2, '0')}_${a.id}.jpg`, type: 'jpeg', quality: 75 });
     }
     const cur = await W(() => window.__g.G.step); total++;
     if (cur === step && (await W(() => window.__g.G.mode)) === 'play') { skipped.push(a ? a.id : '?'); if (shots) await page.screenshot({ path: `${OUT}/stall_${id}_${a && a.id}.png` }); await W(() => window.__g.skipStep()); await sleep(1500); }
