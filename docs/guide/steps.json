@@ -1,0 +1,1033 @@
+{
+ "levels": {
+  "padlock": {
+   "name": "Rusty Padlock",
+   "steps": [
+    {
+     "id": "chip",
+     "name": "Chip Off the Rust Scale",
+     "tool": "chisel",
+     "toolLabel": "Chisel",
+     "input": "Scratch",
+     "hint": "Scratch the chisel across each flaking lump until it breaks off.",
+     "done": "Scale knocked off"
+    },
+    {
+     "id": "electro",
+     "name": "Electrolysis Bath",
+     "tool": "hand",
+     "toolLabel": "Cleaning Tank",
+     "input": "Drag, Hold",
+     "hint": "Drag the lock into the soda bath, clip on both leads, then hold the button.",
+     "done": "Rust turned to soft black sludge"
+    },
+    {
+     "id": "key",
+     "name": "Free the Stuck Key",
+     "tool": "torch",
+     "toolLabel": "Butane Torch",
+     "input": "Hold",
+     "hint": "Hold the torch on the keyhole until it glows, then twist the key out.",
+     "done": "The key is free!"
+    },
+    {
+     "id": "split",
+     "name": "Split the Body Open",
+     "tool": "chisel",
+     "toolLabel": "Chisel",
+     "input": "Tap",
+     "hint": "Strike the chisel into the seam at each mark.",
+     "done": "Face plate off"
+    },
+    {
+     "id": "wheel",
+     "name": "Wire-Wheel to Bright Steel",
+     "tool": "grind",
+     "toolLabel": "Rotary Grinder",
+     "input": "Scrub",
+     "hint": "Run the wire wheel over every part until the black turns to bright steel.",
+     "done": "Bright, pitted steel"
+    },
+    {
+     "id": "blue",
+     "name": "Cold-Blue the Iron",
+     "tool": "stain",
+     "toolLabel": "Stain Brush",
+     "input": "Brush",
+     "hint": "Brush the bluing over the steel for a deep blue-black finish.",
+     "done": "Blue-black and protected"
+    },
+    {
+     "id": "refit",
+     "name": "Refit the Lock Parts",
+     "tool": "hand",
+     "toolLabel": "Bare Hands",
+     "input": "Drag",
+     "hint": "Drag the levers, shackle and face plate back into place.",
+     "done": "Mechanism back in"
+    },
+    {
+     "id": "rivets",
+     "name": "Peen the Rivets",
+     "tool": "hammer",
+     "toolLabel": "Hammer",
+     "input": "Tap on time",
+     "hint": "Strike each rivet when the needle is in the green.",
+     "done": "Riveted tight"
+    },
+    {
+     "id": "test",
+     "name": "Key Test",
+     "tool": "hand",
+     "toolLabel": "Bare Hands",
+     "input": "Drag / Tap",
+     "hint": "Drag the key to turn it: the shackle springs open. Close it again, twice.",
+     "done": "It works with its original key!"
+    },
+    {
+     "id": "compare",
+     "name": "Before and After",
+     "tool": "none",
+     "toolLabel": "Slider",
+     "input": "Drag",
+     "hint": "Drag the slider across to compare the object you started with against your restoration.",
+     "done": "Fully restored"
+    }
+   ]
+  },
+  "knife": {
+   "name": "Pocket Knife",
+   "steps": [
+    {
+     "id": "crust",
+     "name": "Knock Off the Rust Crust",
+     "tool": "chisel",
+     "toolLabel": "Chisel",
+     "input": "Scratch",
+     "hint": "Scratch the chisel across each lump of rust until it breaks off.",
+     "done": "The shape of a knife appears"
+    },
+    {
+     "id": "seam",
+     "name": "Open the Seam",
+     "tool": "grind",
+     "toolLabel": "Carbide Burr",
+     "input": "Trace",
+     "hint": "Trace the burr along the line where blade and handle are fused.",
+     "done": "Blade outline free"
+    },
+    {
+     "id": "electro",
+     "name": "Electrolysis",
+     "tool": "hand",
+     "toolLabel": "Cleaning Jar",
+     "input": "Drag, Hold",
+     "hint": "Lower the knife into the jar, then hold the button to run the current.",
+     "done": "Rust softened to black scale"
+    },
+    {
+     "id": "scrape",
+     "name": "Scrape the Black Scale",
+     "tool": "scraper",
+     "toolLabel": "Paint Scraper",
+     "input": "Scrape",
+     "hint": "Scrape off the black scale the electrolysis loosened.",
+     "done": "Scale gone"
+    },
+    {
+     "id": "wheel",
+     "name": "Wire-Wheel Reveal",
+     "tool": "grind",
+     "toolLabel": "Rotary Grinder",
+     "input": "Scrub",
+     "hint": "Run the wire wheel over the knife. Bright steel appears under the grey.",
+     "done": "Bright steel!"
+    },
+    {
+     "id": "pins",
+     "name": "Punch Out the Pins",
+     "tool": "punch",
+     "toolLabel": "Pin Punch",
+     "input": "Tap",
+     "hint": "Tap each pin twice to drive it out.",
+     "done": "Knife comes apart"
+    },
+    {
+     "id": "sharpen",
+     "name": "Sharpen the Blade",
+     "tool": "stone",
+     "toolLabel": "Whetstone",
+     "input": "Long strokes",
+     "hint": "Make long strokes along the edge while keeping the angle needle in the green.",
+     "done": "Razor sharp"
+    },
+    {
+     "id": "ring",
+     "name": "Forge a New Bail Ring",
+     "tool": "torch",
+     "toolLabel": "Butane Torch",
+     "input": "Hold",
+     "hint": "Heat the wire until it glows, then circle to bend it round.",
+     "done": "New ring forged"
+    },
+    {
+     "id": "oil",
+     "name": "Oil Finish & Rivet Together",
+     "tool": "stain",
+     "toolLabel": "Stain Brush",
+     "input": "Brush",
+     "hint": "Brush the protective oil over the steel. The knife goes back together when it is coated.",
+     "done": "Dark, protected patina"
+    },
+    {
+     "id": "fold",
+     "name": "Flick It Open",
+     "tool": "hand",
+     "toolLabel": "Bare Hands",
+     "input": "Drag / Tap",
+     "hint": "Swing the blade open, then fold it shut. Do it twice.",
+     "done": "Folds like new"
+    },
+    {
+     "id": "compare",
+     "name": "Before and After",
+     "tool": "none",
+     "toolLabel": "Slider",
+     "input": "Drag",
+     "hint": "Drag the slider across to compare the object you started with against your restoration.",
+     "done": "Fully restored"
+    }
+   ]
+  },
+  "sword": {
+   "name": "Rusty Longsword",
+   "steps": [
+    {
+     "id": "rivets",
+     "name": "Knock Out the Rivets",
+     "tool": "hammer",
+     "toolLabel": "Hammer",
+     "input": "Tap",
+     "hint": "Tap each rivet head twice to drive it out of the handle.",
+     "done": "Rivets out"
+    },
+    {
+     "id": "handle",
+     "name": "Pull Off the Handle",
+     "tool": "hand",
+     "toolLabel": "Bare Hands",
+     "input": "Drag",
+     "hint": "Grab the grip and slide it straight off the tang.",
+     "done": "Handle off"
+    },
+    {
+     "id": "chip",
+     "name": "Pick Off the Deep Rust",
+     "tool": "pick",
+     "toolLabel": "Metal Pick",
+     "input": "Scratch",
+     "hint": "Scratch each crusty lump until it breaks off.",
+     "done": "Crust cleared"
+    },
+    {
+     "id": "wash",
+     "name": "Wash Off the Residue",
+     "tool": "soap",
+     "toolLabel": "Soap Brush",
+     "input": "Scrub",
+     "hint": "Scrub the black film away with the soapy brush.",
+     "done": "Residue washed off"
+    },
+    {
+     "id": "grind",
+     "name": "Grind Out the Flaws",
+     "tool": "grind",
+     "toolLabel": "Rotary Grinder",
+     "input": "Hold",
+     "hint": "Press the grinder on each marked flaw and hold.",
+     "done": "Flaws ground out"
+    },
+    {
+     "id": "file",
+     "name": "File the Edges",
+     "tool": "file",
+     "toolLabel": "Metal File",
+     "input": "Long strokes",
+     "hint": "Stroke the file along both edges of the blade.",
+     "done": "Edges trued"
+    },
+    {
+     "id": "polish",
+     "name": "Polish the Blade",
+     "tool": "buff",
+     "toolLabel": "Buffing Wheel",
+     "input": "Circles",
+     "hint": "Buff in small circles until the blade becomes a mirror.",
+     "done": "Mirror blade"
+    },
+    {
+     "id": "stain",
+     "name": "Restore the Handle",
+     "tool": "stain",
+     "toolLabel": "Stain Brush",
+     "input": "Brush",
+     "hint": "Brush warm stain over the grip. Turn it to reach the other side.",
+     "done": "Handle restored"
+    },
+    {
+     "id": "attach",
+     "name": "Reattach the Handle",
+     "tool": "hand",
+     "toolLabel": "Bare Hands",
+     "input": "Drag",
+     "hint": "Carry the grip to the glowing outline on the tang.",
+     "done": "Handle seated"
+    },
+    {
+     "id": "secure",
+     "name": "Hammer the Rivets Home",
+     "tool": "hammer",
+     "toolLabel": "Hammer",
+     "input": "Tap on time",
+     "hint": "Strike each brass rivet when the needle is in the green.",
+     "done": "Rivets set"
+    },
+    {
+     "id": "compare",
+     "name": "Before and After",
+     "tool": "none",
+     "toolLabel": "Slider",
+     "input": "Drag",
+     "hint": "Drag the slider across to compare the object you started with against your restoration.",
+     "done": "Fully restored"
+    }
+   ]
+  },
+  "lighter": {
+   "name": "Vintage Lighter",
+   "steps": [
+    {
+     "id": "shell",
+     "name": "Remove the Outer Shell",
+     "tool": "hand",
+     "toolLabel": "Bare Hands",
+     "input": "Drag",
+     "hint": "Grab the case and slide it straight down off the insert.",
+     "done": "Shell off"
+    },
+    {
+     "id": "cotton",
+     "name": "Remove the Old Cotton",
+     "tool": "tweez",
+     "toolLabel": "Tweezers",
+     "input": "Drag",
+     "hint": "Pull out each lump of old cotton with the tweezers.",
+     "done": "Cotton out"
+    },
+    {
+     "id": "hinge",
+     "name": "Remove the Hinge Pin",
+     "tool": "punch",
+     "toolLabel": "Pin Punch",
+     "input": "Tap",
+     "hint": "Tap the hinge pin three times to knock it out.",
+     "done": "Hinge out"
+    },
+    {
+     "id": "wheel",
+     "name": "Remove the Flint Wheel",
+     "tool": "pliers",
+     "toolLabel": "Pliers",
+     "input": "Drag",
+     "hint": "Pinch the flint wheel and lift it out.",
+     "done": "Wheel out"
+    },
+    {
+     "id": "grind",
+     "name": "Sand the Damaged Spots",
+     "tool": "grind",
+     "toolLabel": "Rotary Grinder",
+     "input": "Hold",
+     "hint": "Press the sanding wheel on each marked flaw and hold.",
+     "done": "Flaws smoothed"
+    },
+    {
+     "id": "polish",
+     "name": "Polish the Main Body",
+     "tool": "buff",
+     "toolLabel": "Buffing Wheel",
+     "input": "Circles",
+     "hint": "Buff the parts in circles until they gleam.",
+     "done": "Parts gleaming"
+    },
+    {
+     "id": "mech",
+     "name": "Reassemble the Mechanism",
+     "tool": "hand",
+     "toolLabel": "Bare Hands",
+     "input": "Drag",
+     "hint": "Drag the flint wheel and the shaft back into the insert.",
+     "done": "Mechanism assembled"
+    },
+    {
+     "id": "newcot",
+     "name": "Install Fresh Cotton",
+     "tool": "tweez",
+     "toolLabel": "Tweezers",
+     "input": "Drag",
+     "hint": "Pack the fresh white cotton into the tank.",
+     "done": "Cotton installed"
+    },
+    {
+     "id": "paint",
+     "name": "Spray the GenZ Finish",
+     "tool": "paint",
+     "toolLabel": "Spray Paint",
+     "input": "Sweep",
+     "hint": "Spray an even coat over the case and lid.",
+     "done": "Body painted"
+    },
+    {
+     "id": "test",
+     "name": "Lid Motion Check",
+     "tool": "hand",
+     "toolLabel": "Bare Hands",
+     "input": "Drag / Tap",
+     "hint": "Flip the lid open, then snap it shut. Do it twice.",
+     "done": "Works perfectly"
+    },
+    {
+     "id": "compare",
+     "name": "Before and After",
+     "tool": "none",
+     "toolLabel": "Slider",
+     "input": "Drag",
+     "hint": "Drag the slider across to compare the object you started with against your restoration.",
+     "done": "Fully restored"
+    }
+   ]
+  },
+  "watch": {
+   "name": "Wristwatch",
+   "steps": [
+    {
+     "id": "crystal",
+     "name": "Remove the Damaged Crystal",
+     "tool": "press",
+     "toolLabel": "Press Tool",
+     "input": "Drag",
+     "hint": "Lift the scratched crystal off the bezel.",
+     "done": "Crystal off"
+    },
+    {
+     "id": "back",
+     "name": "Open the Back Cover",
+     "tool": "hand",
+     "toolLabel": "Case Wrench",
+     "input": "Circle",
+     "hint": "Turn the case back counter-clockwise to unscrew it.",
+     "done": "Back open"
+    },
+    {
+     "id": "movement",
+     "name": "Remove the Movement",
+     "tool": "hand",
+     "toolLabel": "Bare Hands",
+     "input": "Drag",
+     "hint": "Lift the movement out through the open back.",
+     "done": "Movement out"
+    },
+    {
+     "id": "hands",
+     "name": "Remove the Hands",
+     "tool": "tweez",
+     "toolLabel": "Tweezers",
+     "input": "Drag",
+     "hint": "Lift each hand off the centre post with the tweezers.",
+     "done": "Hands off"
+    },
+    {
+     "id": "dial",
+     "name": "Clean the Dial",
+     "tool": "soft",
+     "toolLabel": "Soft Brush",
+     "input": "Scrub",
+     "hint": "Gently brush the dust and spots off the dial.",
+     "done": "Dial spotless"
+    },
+    {
+     "id": "bracelet",
+     "name": "Restore the Bracelet",
+     "tool": "soap",
+     "toolLabel": "Soap Brush",
+     "input": "Scrub",
+     "hint": "Scrub the links clean and bright.",
+     "done": "Links shining"
+    },
+    {
+     "id": "polish",
+     "name": "Polish the Case",
+     "tool": "cloth",
+     "toolLabel": "Polishing Cloth",
+     "input": "Circles",
+     "hint": "Rub in small circles for a premium shine.",
+     "done": "Premium shine"
+    },
+    {
+     "id": "handsIn",
+     "name": "Install the Hands",
+     "tool": "tweez",
+     "toolLabel": "Tweezers",
+     "input": "Drag",
+     "hint": "Drop each hand onto the centre post.",
+     "done": "Hands set"
+    },
+    {
+     "id": "crystalIn",
+     "name": "Install the New Crystal",
+     "tool": "press",
+     "toolLabel": "Press Tool",
+     "input": "Drag",
+     "hint": "Press the clear new crystal into the bezel.",
+     "done": "Crystal seated"
+    },
+    {
+     "id": "time",
+     "name": "Final Time Check",
+     "tool": "hand",
+     "toolLabel": "Crown",
+     "input": "Circle",
+     "hint": "Wind the crown in circles and watch the hands move.",
+     "done": "Keeping time"
+    },
+    {
+     "id": "compare",
+     "name": "Before and After",
+     "tool": "none",
+     "toolLabel": "Slider",
+     "input": "Drag",
+     "hint": "Drag the slider across to compare the object you started with against your restoration.",
+     "done": "Fully restored"
+    }
+   ]
+  },
+  "keyboard": {
+   "name": "Old PC Keyboard",
+   "steps": [
+    {
+     "id": "pull",
+     "name": "Pop Off the Keycaps",
+     "tool": "puller",
+     "toolLabel": "Keycap Puller",
+     "input": "Tap",
+     "hint": "Tap each glowing key to pop it off. The rest follow.",
+     "done": "All keycaps off"
+    },
+    {
+     "id": "brush",
+     "name": "Brush Out the Hair & Crumbs",
+     "tool": "soft",
+     "toolLabel": "Soft Brush",
+     "input": "Sweep",
+     "hint": "Sweep the brush over the plate to clear the crumbs and dust.",
+     "done": "Loose debris gone"
+    },
+    {
+     "id": "singe",
+     "name": "Singe the Last Hairs",
+     "tool": "lighter",
+     "toolLabel": "Lighter",
+     "input": "Hold",
+     "hint": "Hold the little flame over each hair until it curls away.",
+     "done": "Not a hair left"
+    },
+    {
+     "id": "screws",
+     "name": "Unscrew the Case",
+     "tool": "screw",
+     "toolLabel": "Screwdriver",
+     "input": "Hold",
+     "hint": "Press and hold each corner screw.",
+     "done": "Case open"
+    },
+    {
+     "id": "dishwasher",
+     "name": "Run It Through the Dishwasher",
+     "tool": "hand",
+     "toolLabel": "Bare Hands",
+     "input": "Tap, Hold",
+     "hint": "Tap the shell, base and plate to load them, then hold the button to wash.",
+     "done": "Squeaky clean (but still yellow)"
+    },
+    {
+     "id": "uv",
+     "name": "Peroxide & UV Bath",
+     "tool": "hand",
+     "toolLabel": "Cleaning Tank",
+     "input": "Drag, Hold",
+     "hint": "Lower the keyboard into the peroxide, then hold the button to switch on the UV lamps.",
+     "done": "White again!"
+    },
+    {
+     "id": "led",
+     "name": "Polish the LED Window",
+     "tool": "buff",
+     "toolLabel": "Buffing Wheel",
+     "input": "Hold",
+     "hint": "Hold the polishing pad on the hazy LED window until it is clear.",
+     "done": "Crystal clear"
+    },
+    {
+     "id": "keys",
+     "name": "Click the Keycaps Back On",
+     "tool": "hand",
+     "toolLabel": "Bare Hands",
+     "input": "Tap",
+     "hint": "Tap the glowing slots to press keys back on. The rest snap in by themselves.",
+     "done": "Keys back on"
+    },
+    {
+     "id": "type",
+     "name": "Typing Test",
+     "tool": "hand",
+     "toolLabel": "Bare Hands",
+     "input": "Tap",
+     "hint": "Type THANKYOU on the glowing keys.",
+     "done": "Every key clicks"
+    },
+    {
+     "id": "compare",
+     "name": "Before and After",
+     "tool": "none",
+     "toolLabel": "Slider",
+     "input": "Drag",
+     "hint": "Drag the slider across to compare the object you started with against your restoration.",
+     "done": "Fully restored"
+    }
+   ]
+  },
+  "clock": {
+   "name": "Twin-Bell Alarm Clock",
+   "steps": [
+    {
+     "id": "movement",
+     "name": "Pull Out the Movement",
+     "tool": "pry",
+     "toolLabel": "Pry Tool",
+     "input": "Drag",
+     "hint": "Pry the back cover off, then pull the movement out of the case.",
+     "done": "Movement out"
+    },
+    {
+     "id": "wheels",
+     "name": "Tweeze Out the Gears",
+     "tool": "tweez",
+     "toolLabel": "Tweezers",
+     "input": "Tap",
+     "hint": "Tap each brass wheel to lift it out with the tweezers.",
+     "done": "Movement stripped"
+    },
+    {
+     "id": "acid",
+     "name": "Citric Acid Bath",
+     "tool": "hand",
+     "toolLabel": "Cleaning Jar",
+     "input": "Drag, Circle",
+     "hint": "Lower the movement into the jar, then swirl until the rust dissolves.",
+     "done": "Clean brass"
+    },
+    {
+     "id": "polish",
+     "name": "Polish the Brass",
+     "tool": "buff",
+     "toolLabel": "Buffing Wheel",
+     "input": "Circles",
+     "hint": "Buff the plates and both bells in small circles until they shine.",
+     "done": "Mirror brass"
+    },
+    {
+     "id": "braze",
+     "name": "Braze the Rust Holes",
+     "tool": "torch",
+     "toolLabel": "Butane Torch",
+     "input": "Trace",
+     "hint": "Trace the torch around each hole: molten brass fills it.",
+     "done": "Holes sealed"
+    },
+    {
+     "id": "sand",
+     "name": "Fill & Sand Smooth",
+     "tool": "sand",
+     "toolLabel": "Sandpaper",
+     "input": "Sand",
+     "hint": "Sand the filled case smooth, rust and all.",
+     "done": "Smooth as new"
+    },
+    {
+     "id": "spray",
+     "name": "Spray Gloss Black",
+     "tool": "paint",
+     "toolLabel": "Spray Paint",
+     "input": "Sweep",
+     "hint": "Spray an even coat of gloss black over the case.",
+     "done": "Deep gloss black"
+    },
+    {
+     "id": "dial",
+     "name": "Fit the New Dial & Hands",
+     "tool": "hand",
+     "toolLabel": "Bare Hands",
+     "input": "Drag",
+     "hint": "Drop the movement, the new dial, each hand and the glass into place.",
+     "done": "Clock face restored"
+    },
+    {
+     "id": "wind",
+     "name": "Wind It & Ring It",
+     "tool": "hand",
+     "toolLabel": "Winding Key",
+     "input": "Circle",
+     "hint": "Circle around the winding key to wind the clock. It ticks, then rings!",
+     "done": "Tick tock... RING!"
+    },
+    {
+     "id": "compare",
+     "name": "Before and After",
+     "tool": "none",
+     "toolLabel": "Slider",
+     "input": "Drag",
+     "hint": "Drag the slider across to compare the object you started with against your restoration.",
+     "done": "Fully restored"
+    }
+   ]
+  },
+  "guitar": {
+   "name": "Stratocaster",
+   "steps": [
+    {
+     "id": "snip",
+     "name": "Snip the Rusty Strings",
+     "tool": "snips",
+     "toolLabel": "Wire Snips",
+     "input": "Tap",
+     "hint": "Tap each string to snip it. It springs loose.",
+     "done": "Strings off"
+    },
+    {
+     "id": "strip",
+     "name": "Strip the Hardware",
+     "tool": "hand",
+     "toolLabel": "Bare Hands",
+     "input": "Drag",
+     "hint": "Pull the pickguard, the bridge and the neck off the body.",
+     "done": "Body stripped"
+    },
+    {
+     "id": "stripper",
+     "name": "Brush On Paint Stripper",
+     "tool": "stain",
+     "toolLabel": "Stain Brush",
+     "input": "Brush",
+     "hint": "Brush the stripper over the whole top. The old finish blisters.",
+     "done": "Finish bubbling up"
+    },
+    {
+     "id": "scrape",
+     "name": "Scrape Off the Old Paint",
+     "tool": "scraper",
+     "toolLabel": "Paint Scraper",
+     "input": "Scrape",
+     "hint": "Push the scraper across the body. The paint peels off in ribbons.",
+     "done": "Down to the wood"
+    },
+    {
+     "id": "sand",
+     "name": "Sand to Bare Wood",
+     "tool": "sand",
+     "toolLabel": "Sandpaper",
+     "input": "Sand",
+     "hint": "Sand the body until the wood is clean and smooth.",
+     "done": "Smooth fresh alder"
+    },
+    {
+     "id": "spray",
+     "name": "Spray Metallic Red",
+     "tool": "paint",
+     "toolLabel": "Spray Paint",
+     "input": "Sweep",
+     "hint": "Sweep the spray gun over the body for a deep gloss red.",
+     "done": "Candy-apple red!"
+    },
+    {
+     "id": "poles",
+     "name": "Polish the Pickup Poles",
+     "tool": "buff",
+     "toolLabel": "Buffing Wheel",
+     "input": "Hold",
+     "hint": "Hold the felt wheel on each pickup until its rusty poles turn to chrome.",
+     "done": "Chrome poles"
+    },
+    {
+     "id": "frets",
+     "name": "Press In New Frets",
+     "tool": "press",
+     "toolLabel": "Press Tool",
+     "input": "Tap on time",
+     "hint": "Press each new fret in when the needle crosses the green.",
+     "done": "Twenty-one new frets"
+    },
+    {
+     "id": "tune",
+     "name": "String Up & Tune",
+     "tool": "hand",
+     "toolLabel": "Tuning Pegs",
+     "input": "Circle",
+     "hint": "Circle around each glowing peg until the tuner needle sits in the green.",
+     "done": "In tune!"
+    },
+    {
+     "id": "strum",
+     "name": "Strum a Chord",
+     "tool": "hand",
+     "toolLabel": "Hand",
+     "input": "Swipe",
+     "hint": "Swipe across all six strings over the pickups.",
+     "done": "What a sound!"
+    },
+    {
+     "id": "compare",
+     "name": "Before and After",
+     "tool": "none",
+     "toolLabel": "Slider",
+     "input": "Drag",
+     "hint": "Drag the slider across to compare the object you started with against your restoration.",
+     "done": "Fully restored"
+    }
+   ]
+  },
+  "typewriter": {
+   "name": "Typewriter",
+   "steps": [
+    {
+     "id": "carriage",
+     "name": "Lift Off the Carriage",
+     "tool": "hand",
+     "toolLabel": "Bare Hands",
+     "input": "Drag",
+     "hint": "Lift the carriage straight up and off the machine.",
+     "done": "Carriage off"
+    },
+    {
+     "id": "typebars",
+     "name": "Pull the Typebars",
+     "tool": "pliers",
+     "toolLabel": "Pliers",
+     "input": "Tap",
+     "hint": "Tap the marked typebars to pull them out. The rest follow.",
+     "done": "Typebars out"
+    },
+    {
+     "id": "jar",
+     "name": "Rust-Remover Jar",
+     "tool": "hand",
+     "toolLabel": "Cleaning Jar",
+     "input": "Drag, Circle",
+     "hint": "Lower the typebars into the jar, then swirl until they come out clean.",
+     "done": "Bright steel typebars"
+    },
+    {
+     "id": "blast",
+     "name": "Sandblast the Panels",
+     "tool": "sandgun",
+     "toolLabel": "Sandblaster",
+     "input": "Sweep",
+     "hint": "Sweep the sandblaster over the body until it is bare grey metal.",
+     "done": "Bare metal"
+    },
+    {
+     "id": "black",
+     "name": "Spray Gloss Black",
+     "tool": "paint",
+     "toolLabel": "Spray Paint",
+     "input": "Sweep",
+     "hint": "Spray an even coat of gloss black.",
+     "done": "Deep gloss black"
+    },
+    {
+     "id": "logo",
+     "name": "Laser the Olympia Logo",
+     "tool": "laser",
+     "toolLabel": "Laser Engraver",
+     "input": "Trace",
+     "hint": "Trace the laser along the script to burn the logo back in.",
+     "done": "Olympia is back!"
+    },
+    {
+     "id": "oil",
+     "name": "Oil the Key Pivots",
+     "tool": "oil",
+     "toolLabel": "Oil Can",
+     "input": "Tap",
+     "hint": "Tap each pivot point to put a drop of oil on it.",
+     "done": "Every key moves freely"
+    },
+    {
+     "id": "refit",
+     "name": "Refit the Carriage",
+     "tool": "hand",
+     "toolLabel": "Bare Hands",
+     "input": "Drag",
+     "hint": "Drop the carriage back onto its rails.",
+     "done": "Carriage moves"
+    },
+    {
+     "id": "type",
+     "name": "Typing Test",
+     "tool": "hand",
+     "toolLabel": "Bare Hands",
+     "input": "Tap",
+     "hint": "Type RESTORED on the glowing keys.",
+     "done": "RESTORED"
+    },
+    {
+     "id": "compare",
+     "name": "Before and After",
+     "tool": "none",
+     "toolLabel": "Slider",
+     "input": "Drag",
+     "hint": "Drag the slider across to compare the object you started with against your restoration.",
+     "done": "Fully restored"
+    }
+   ]
+  },
+  "pistol": {
+   "name": "Antique Pistol",
+   "steps": [
+    {
+     "id": "pick",
+     "name": "Pick Off Heavy Corrosion",
+     "tool": "pick",
+     "toolLabel": "Metal Pick",
+     "input": "Scratch",
+     "hint": "Scratch each crust of rust until it breaks away.",
+     "done": "Crust broken"
+    },
+    {
+     "id": "compound",
+     "name": "Apply Cleaning Compound",
+     "tool": "compound",
+     "toolLabel": "Cleaning Compound",
+     "input": "Scrub",
+     "hint": "Spread the compound over the metal.",
+     "done": "Compound on"
+    },
+    {
+     "id": "straighten",
+     "name": "Straighten the Exterior",
+     "tool": "press",
+     "toolLabel": "Press Tool",
+     "input": "Hold",
+     "hint": "Hold the press on each highlighted bend.",
+     "done": "Lines true"
+    },
+    {
+     "id": "cracks",
+     "name": "Repair the Exterior Cracks",
+     "tool": "filler",
+     "toolLabel": "Repair Filler",
+     "input": "Trace",
+     "hint": "Trace each highlighted crack to fill it.",
+     "done": "Cracks filled"
+    },
+    {
+     "id": "grind",
+     "name": "Grind the Repair Marks",
+     "tool": "grind",
+     "toolLabel": "Rotary Grinder",
+     "input": "Hold",
+     "hint": "Hold the grinder on each raised seam until it is flush.",
+     "done": "Seams flush"
+    },
+    {
+     "id": "polish",
+     "name": "Polish the Exterior Metal",
+     "tool": "cloth",
+     "toolLabel": "Polishing Cloth",
+     "input": "Circles",
+     "hint": "Rub the metal in circles until it gleams.",
+     "done": "Metal gleaming"
+    },
+    {
+     "id": "finish",
+     "name": "Apply the Final Finish",
+     "tool": "finish",
+     "toolLabel": "Finish Brush",
+     "input": "Brush",
+     "hint": "Brush the protective finish over stock and barrel.",
+     "done": "Museum finish"
+    },
+    {
+     "id": "parts",
+     "name": "Reassemble Cosmetic Parts",
+     "tool": "hand",
+     "toolLabel": "Bare Hands",
+     "input": "Drag",
+     "hint": "Fit the new butt cap, ramrod and side pins.",
+     "done": "Display complete"
+    },
+    {
+     "id": "check",
+     "name": "Mechanical Presentation Check",
+     "tool": "hand",
+     "toolLabel": "Bare Hands",
+     "input": "Tap",
+     "hint": "Tap the hammer and the frizzen to see them move.",
+     "done": "Moves like new"
+    },
+    {
+     "id": "compare",
+     "name": "Before / After Reveal",
+     "tool": "none",
+     "toolLabel": "Slider",
+     "input": "Drag",
+     "hint": "Drag the slider to see the full transformation.",
+     "done": "Fully restored"
+    }
+   ]
+  }
+ },
+ "tools": [
+  "chisel",
+  "hand",
+  "torch",
+  "grind",
+  "stain",
+  "hammer",
+  "none",
+  "scraper",
+  "punch",
+  "stone",
+  "pick",
+  "soap",
+  "file",
+  "buff",
+  "tweez",
+  "pliers",
+  "paint",
+  "press",
+  "soft",
+  "cloth",
+  "puller",
+  "lighter",
+  "screw",
+  "pry",
+  "sand",
+  "snips",
+  "sandgun",
+  "laser",
+  "oil",
+  "compound",
+  "filler",
+  "finish"
+ ]
+}
