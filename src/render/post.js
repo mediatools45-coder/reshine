@@ -109,7 +109,7 @@ class DofPass extends Pass {
     this.quad = new FullScreenQuad(this.mat);
   }
   render(renderer, writeBuffer, readBuffer) {
-    const u = this.mat.uniforms, c = R.camera; u.tColor.value = readBuffer.texture; u.tDepth.value = R.depthTex;
+    const u = this.mat.uniforms, c = R.camera; u.tColor.value = readBuffer.texture; /* never sample the depth of the target being drawn into (a GL feedback loop draws nothing) */ u.tDepth.value = R.dofOn && R.depthTex && R.depthTex !== writeBuffer.depthTexture ? R.depthTex : null;
     u.uPx.value.set(1 / readBuffer.width, 1 / readBuffer.height); u.uNear.value = c.near; u.uFar.value = c.far; u.uFocus.value = R.focus; u.uRange.value = Math.max(.8, R.focus * .14);
     u.uMaxR.value = (R.dofOn && R.q >= 2 && !R.cmp ? 6.5 * R.aperture : 0) * R.dpr * (readBuffer.height / 900 + .3); u.uTime.value = performance.now() / 1000;
     renderer.setRenderTarget(this.renderToScreen ? null : writeBuffer); this.quad.render(renderer);

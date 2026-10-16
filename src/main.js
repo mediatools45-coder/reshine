@@ -36,6 +36,10 @@ function boot() {
   addEventListener('resize', () => resize(dprCap * res)); addEventListener('orientationchange', () => setTimeout(() => resize(dprCap * res), 200));
   G.autoTurn = store.get('rw_auto') !== '0'; AU.on = store.get('rw_snd') !== '0';
   $('mAuto').textContent = 'Auto turn: ' + (G.autoTurn ? 'on' : 'off'); $('mSnd').textContent = 'Sound: ' + (AU.on ? 'on' : 'off');
+  /* if the GPU drops the WebGL context (driver reset, memory pressure) the canvas goes blank: reload once it comes
+     back; progress is saved after every step, so "Continue" picks up where the player was */
+  cv.addEventListener('webglcontextlost', e => { e.preventDefault(); toast('Graphics reset: reloading…', 3000); }, false);
+  cv.addEventListener('webglcontextrestored', () => location.reload(), false);
   tickKeys = bindControls(cv);
   bindUI({ menu: openMenu, closeMenu, shop: toShop, restart: () => startLevel(G.level, 0), cycleQuality, progress: n => { if (G.level && n < G.steps.length) { const s = save[G.level.id] || (save[G.level.id] = {}); s.step = n; s.pct = Math.max(s.pct || 0, Math.round(n / G.steps.length * 100)); persist(); } } });
   HOOK.complete = complete;
@@ -45,7 +49,7 @@ function boot() {
   $('btnShop').onclick = () => { sfx('click'); toShop(); };
   $('btnLook').onclick = () => { $('done').classList.remove('on'); toast('Drag to spin · two fingers to move · pinch to zoom', 2600); };
   document.addEventListener('visibilitychange', () => { if (document.hidden && G.mode === 'play') openMenu(); });
-  window.__g = { P, gallery, auto, G, RIG, CAM, T, R, LEVELS, openLevel, startLevel, ff, skipStep, finishStep, enterStep, st, save, setQuality: applyQuality, toShop, clock, setView, THREE, BENCH_Y, thumbs: () => Object.fromEntries(LEVELS.map(d => [d.id, d.thumb])) };
+  window.__g = { P, gallery, auto, G, RIG, CAM, T, R, LEVELS, openLevel, startLevel, ff, skipStep, finishStep, enterStep, st, save, setQuality: applyQuality, toShop, clock, setView, THREE, BENCH_Y, probe: () => { render(); return probeFrame(); }, thumbs: () => Object.fromEntries(LEVELS.map(d => [d.id, d.thumb])) };
   resize(dprCap * res);
   requestAnimationFrame(frame);
   if (SPLIT) { $('btnShop').textContent = 'Back to All Relics'; $('mShop').textContent = 'Back to All Relics'; $('load').classList.remove('on'); $('shop').classList.remove('on'); openLevel(LEVELS[0].id); return; }
