@@ -91,7 +91,8 @@ void main(){
   float lum=dot(col,vec3(.2126,.7152,.0722));
   col=max(vec3(0.),mix(vec3(lum),col,1.1));
   col*=mix(vec3(.84,.93,1.16),vec3(1.07,1.,.92),smoothstep(.01,.6,lum));
-  col=.18*pow(col/.18,vec3(1.16));
+  /* contrast only in shadows and mids: highlights keep their value so polished metal never blows out */
+  col=mix(.18*pow(col/.18,vec3(1.16)),col,smoothstep(.35,1.4,lum));
   col=col*col/(col+vec3(.01));
   vec2 d=vUv-.5; float v=smoothstep(.32,.95,length(d*vec2(1.,1.12)));
   col*=1.-v*uVig;
@@ -116,6 +117,12 @@ class DofPass extends Pass {
 }
 
 
+/* clamps extreme specular peaks (a mirror face catching the key light reads 100+): keeps polished
+   metal bright but stops it flooding the bloom and washing the whole frame white */
+class ClampPass extends Pass {
+  constructor(max) { super(); this.q = new FullScreenQuad(new THREE.ShaderMaterial({ uniforms: { tMap: { value: null }, uMax: { value: max } }, vertexShader: VS, fragmentShader: 'uniform sampler2D tMap; uniform float uMax; varying vec2 vUv; void main(){ vec3 c=texture2D(tMap,vUv).rgb; float m=max(c.r,max(c.g,c.b)); gl_FragColor=vec4(c*min(1.,uMax/max(m,1e-4)),1.); }', depthTest: false, depthWrite: false })); }
+  render(renderer, writeBuffer, readBuffer) { this.q.material.uniforms.tMap.value = readBuffer.texture; renderer.setRenderTarget(this.renderToScreen ? null : writeBuffer); this.q.render(renderer); }
+}
 export function initPost(renderer) {
   const rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: 2 }); rt.depthTexture = new THREE.DepthTexture(4, 4); rt.depthTexture.type = THREE.UnsignedIntType;
   const composer = new EffectComposer(renderer, rt); R.composer = composer;
@@ -125,7 +132,8 @@ export function initPost(renderer) {
   ao.updateGtaoMaterial({ radius: .55, distanceExponent: 1.4, thickness: 1.2, scale: 1.1, samples: 12 }); ao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 5, rings: 2, samples: 12 });
   const setSize = ao.setSize.bind(ao); ao.setSize = (w, h) => setSize(Math.max(1, w >> 1), Math.max(1, h >> 1));
   R.ao = ao; composer.addPass(ao);
-  R.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), .25, .45, 4.0); composer.addPass(R.bloom);
+  composer.addPass(new ClampPass(7));
+  R.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), .18, .3, 4.0); composer.addPass(R.bloom);
   R.dof = new DofPass(); composer.addPass(R.dof);
   composer.addPass(new OutputPass());
 }

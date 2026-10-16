@@ -81,7 +81,7 @@ export function setView(v = {}, instant) {
   }
   if (preset === 'full' || preset === 'show') r = Math.max(r, 1.5);
   const vf = R.camera.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * R.camera.aspect), f = Math.min(vf, hf);
-  CAM.gt.copy(c); CAM.gdist = r / Math.sin(f / 2) * (v.k || 1.02); CAM.gel = v.el ?? .22; CAM.gaz = v.az ?? 0; CAM.view = v;
+  CAM.gt.copy(c); CAM.gdist = r / Math.sin(f / 2) * (v.k || 1.1); CAM.gel = v.el ?? .22; CAM.gaz = v.az ?? 0; CAM.view = v;
   CAM.uzoom = 1; CAM.uaz = 0; CAM.uel = 0; CAM.upan.set(0, 0, 0);
   RIG.spin = preset === 'show' ? .25 : 0;
   if (instant || clock.ff) { CAM.t.copy(CAM.gt); CAM.dist = CAM.gdist; CAM.el = CAM.gel; CAM.az = CAM.gaz; }
@@ -156,12 +156,14 @@ export function enterStep(i) {
   HOOK.ui && HOOK.ui('enter', s);
 }
 function runSilently(list) {
-  const ff = clock.ff; clock.ff = true;
+  const ff = clock.ff; clock.ff = true; const snaps = ff ? null : G.item.surfs.map(sf => sf.snap());
   for (const p of list) {
     try { if (p.stage) p.stage(); p.enter && p.enter(); p.skip && p.skip(); if (p.complete) p.complete(true); p.exit && p.exit(); } catch (e) { console.error('auto ' + p.id, e); }
     for (const sf of G.item.surfs) sf.finishFades();
   }
   clock.ff = ff; G.chips = []; G.hold = false; RIG.off.set(0, 0, 0); G.offGoal = null; G.fitExtra = []; RIG.extraQ.identity();
+  /* in live play the folded steps' surface changes glide in instead of popping */
+  if (snaps) G.item.surfs.forEach((sf, i) => sf.xfade(snaps[i]));
 }
 export function finishStep(skipped) {
   const s = st(); if (!s || G.finishing) return; G.finishing = true; G.hold = false; G.down = false; T.spinning = false; setLoop(null);

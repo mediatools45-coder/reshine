@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { R, initEngine, resize, render, setQuality, project, TIERS } from './render/engine.js';
-import { buildStudio } from './render/studio.js';
+import { buildStudio, BENCH_Y } from './render/studio.js';
 import { initParticles, updateParticles, confetti, glints, clearParticles, P } from './fx/particles.js';
 import { initTools, setTool, T, makeTool } from './assets/tools.js';
 import { G, RIG, CAM, HOOK, loadLevel, enterStep, ff, skipStep, finishStep, updateGame, setView, resetView, st } from './game/game.js';
@@ -42,7 +42,7 @@ function boot() {
   $('btnShop').onclick = () => { sfx('click'); toShop(); };
   $('btnLook').onclick = () => { $('done').classList.remove('on'); toast('Drag to spin · two fingers to move · pinch to zoom', 2600); };
   document.addEventListener('visibilitychange', () => { if (document.hidden && G.mode === 'play') openMenu(); });
-  window.__g = { P, gallery, auto, G, RIG, CAM, T, R, LEVELS, openLevel, startLevel, ff, skipStep, finishStep, enterStep, st, save, setQuality: applyQuality, toShop, clock, setView, THREE, thumbs: () => Object.fromEntries(LEVELS.map(d => [d.id, d.thumb])) };
+  window.__g = { P, gallery, auto, G, RIG, CAM, T, R, LEVELS, openLevel, startLevel, ff, skipStep, finishStep, enterStep, st, save, setQuality: applyQuality, toShop, clock, setView, THREE, BENCH_Y, thumbs: () => Object.fromEntries(LEVELS.map(d => [d.id, d.thumb])) };
   resize(dprCap * res);
   requestAnimationFrame(frame);
   makeThumbs().then(() => { $('load').classList.remove('on'); buildShop(); G.mode = 'shop'; if (qs.get('level')) openLevel(qs.get('level')); });

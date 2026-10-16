@@ -22,7 +22,7 @@ export function container(kind, o = {}) {
       shell = mesh(lathe(prof, 40), glass(o.glass || '#c4dfe0', .1, { rough: .1, extra: { envMapIntensity: .25 } }), { cast: false });
       liq = mesh(lathe(prof.map(([a, b]) => [Math.max(.01, a * .95), Math.min(b, H * .72)]).concat([[.01, H * .72]]), 40), new THREE.MeshStandardMaterial({ color: o.liquid || '#4a9aa0', transparent: true, opacity: .42, roughness: .2, depthWrite: false, side: THREE.DoubleSide, envMapIntensity: .3 }), { cast: false });
       top = mesh(new THREE.CircleGeometry(r * .93, 40), new THREE.MeshPhysicalMaterial({ color: o.liquid || '#4a9aa0', transparent: true, opacity: .35, roughness: .02, depthWrite: false }), { r: [-Math.PI / 2, 0, 0], p: [0, H * .72, 0], cast: false });
-      if (isJar) c.add(mesh(cyl(r + .05, r + .05, .14, 40), metal('#9aa5ab', .3), { p: [0, H, 0] }));
+      if (isJar) c.add(mesh(torus(r * .9 + .02, .07, 10, 48), metal('#9aa5ab', .3), { p: [0, H, 0], r: [Math.PI / 2, 0, 0] })); /* open rim: the jar has no lid */
     } else {
       shell = mesh(box(W, H, D), glass(o.glass || '#c4dfe0', .1, { rough: .1, extra: { envMapIntensity: .25 } }), { p: [0, H / 2, 0], cast: false });
       liq = mesh(box(W - .12, H * .74, D - .12), new THREE.MeshPhysicalMaterial({ color: o.liquid || '#3f8c95', transparent: true, opacity: .4, roughness: .05, depthWrite: false }), { p: [0, H * .37 + .06, 0], cast: false });
@@ -48,7 +48,7 @@ export function bath(o) {
       c.scale.set(sc, sy, sc); c.position.set(STAGE.x, BENCH_Y + .1, STAGE.z + (o.cz || 0)); c.visible = true; murk(c, 0);
       const cTop = c.position.y + U.H * sy, liquid = c.position.y + U.H * .72 * sy, rest = bb.min.y - RIG.off.y;
       this.lift = Math.max(0, cTop + .35 - rest); this.depth = Math.max(.5, (bb.max.y - RIG.off.y + this.lift) - liquid + .15);
-      G.offGoal = new THREE.Vector3(0, this.lift - this.depth * .5, 0);
+      G.offGoal = new THREE.Vector3(0, this.lift, 0); /* frame the raised object together with the container (fitExtra) */
       if (o.startIn) { RIG.off.y = this.lift - this.depth; this.phase = o.swirl ? 'swirl' : 'hold'; this.needsHold = !o.swirl; this.prog = .2; G.ui && G.ui('hold'); }
       else if (clock.ff) RIG.off.y = this.lift; else { const y0 = RIG.off.y; tween(.5, k => { RIG.off.y = lerp(y0, this.lift, k); }); }
        G.fitExtra = [c]; G.chips = [{ label: o.chip || 'Treatment', get: () => this.prog }]; if (o.enter) o.enter.call(this);

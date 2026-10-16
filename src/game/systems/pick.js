@@ -32,11 +32,11 @@ export function pick(o) {
       if (c.surf && c.p) c.surf.dab(c.p, c.n, (c.size || .3) * 1.7, o.layer || 'crust', 'sub', 1); if (o.onBreak) o.onBreak.call(this, c);
     },
     grab(c) {
-      if (c.busy) return; c.busy = true; sfx('click'); const m = c.m, w0 = m.getWorldPosition(new THREE.Vector3()); R.scene.attach(m);
+      if (c.busy) return; c.busy = true; sfx('click'); const m = c.m, w0 = m.getWorldPosition(new THREE.Vector3()), home = { par: m.parent, p: m.position.clone(), q: m.quaternion.clone(), s: m.scale.clone() }; R.scene.attach(m);
       const f = new THREE.Vector3(); R.camera.getWorldDirection(f); const side = new THREE.Vector3().crossVectors(f, R.camera.up).normalize();
       const dest = R.camera.position.clone().addScaledVector(f, 6).addScaledVector(R.camera.up, -2.6).addScaledVector(side, rnd(-1.2, 1.2)), s0 = m.scale.x;
       puff(w0, o.puff || [.5, .45, .38], 3, { a: .35 });
-      tween(.75, k => { m.position.lerpVectors(w0, dest, k); m.position.y += Math.sin(k * Math.PI) * 1.2; m.rotation.x += .1; m.scale.setScalar(s0 * (1 - k * .7)); }, () => { m.visible = false; c.gone = true; sfx('pop'); c.busy = false; this.recalc(); }, ease);
+      tween(.75, k => { m.position.lerpVectors(w0, dest, k); m.position.y += Math.sin(k * Math.PI) * 1.2; m.rotation.x += .1; m.scale.setScalar(s0 * (1 - k * .7)); }, () => { m.visible = false; c.gone = true; sfx('pop'); c.busy = false; /* put the hidden piece back in its slot so a later step that shows it again finds it in place */ home.par.add(m); m.position.copy(home.p); m.quaternion.copy(home.q); m.scale.copy(home.s); this.recalc(); }, ease);
       if (c.surf && c.p) c.surf.dab(c.p, c.n, (c.size || .3) * 1.4, o.layer || 'dirt', 'sub', .8);
     },
     recalc() { const n = this.list.length; this.prog = this.list.reduce((a, c) => a + (c.gone ? 1 : Math.max(0, 1 - Math.max(0, c.hp)) * .8), 0) / n; if (this.list.every(c => c.gone) && !this.done_) { this.done_ = true; later(350, () => finishStep()); } },
