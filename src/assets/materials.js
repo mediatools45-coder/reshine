@@ -41,7 +41,7 @@ export const M = {
   /* moulded plastic with a light clearcoat */
   plastic: (color, rough = .38, cc = .35) => cached(`pl${color}${rough}${cc}`, () => new THREE.MeshPhysicalMaterial({ color, roughness: rough, metalness: 0, clearcoat: cc, clearcoatRoughness: .25, normalMap: ccNormal('fine', 2), normalScale: v2(.08) })),
   /* translucent acetate (screwdriver handles) */
-  acetate: (color) => cached('ac' + color, () => new THREE.MeshPhysicalMaterial({ color, roughness: .12, metalness: 0, transmission: .55, thickness: .4, ior: 1.48, clearcoat: 1, clearcoatRoughness: .05, attenuationColor: new THREE.Color(color), attenuationDistance: .6 })),
+  acetate: (color) => cached('ac' + color, () => new THREE.MeshPhysicalMaterial({ color, roughness: .12, metalness: 0, clearcoat: 1, clearcoatRoughness: .05, transparent: true, opacity: .82 })),
   rubber: (color = '#1e2226', rough = .82) => cached(`rb${color}${rough}`, () => new THREE.MeshPhysicalMaterial({ color, roughness: rough, metalness: 0, sheen: .25, sheenRoughness: .8, sheenColor: new THREE.Color('#6a6f74'), normalMap: ccNormal('pebble', 4), normalScale: v2(.45) })),
   wood: (color = '#9b6a3c', rough = .5, varnish = .4) => cached(`wd${color}${rough}${varnish}`, () => { const t = woodTex(color); return new THREE.MeshPhysicalMaterial({ map: t.map, roughness: rough, metalness: 0, clearcoat: varnish, clearcoatRoughness: .3, normalMap: t.normalMap, normalScale: v2(.55) }); }),
   cloth: (color) => cached('cl' + color, () => { const t = clothTex(color); const n = ccNormal('fabric', 1); return new THREE.MeshPhysicalMaterial({ map: t.map, roughness: 1, metalness: 0, sheen: .4, sheenRoughness: .7, sheenColor: new THREE.Color(color).lerp(new THREE.Color('#ffffff'), .2), normalMap: n, normalScale: v2(.9) }); }),
@@ -50,6 +50,6 @@ export const M = {
   file: () => cached('file', () => { const t = fileTex(); const n = t.normalMap.clone(); n.repeat.set(2, 10); n.needsUpdate = true; return new THREE.MeshPhysicalMaterial({ color: '#7a8288', metalness: .9, roughness: .5, normalMap: n, normalScale: v2(1.6) }); }),
   label: (title, sub, bg, fg) => cached(`lb${title}${bg}`, () => new THREE.MeshPhysicalMaterial({ map: labelTex(title, sub, bg, fg), roughness: .3, metalness: .35, clearcoat: .6, clearcoatRoughness: .15 })),
   paint: (color, rough = .3) => cached(`pt${color}${rough}`, () => new THREE.MeshPhysicalMaterial({ color, roughness: rough, metalness: .15, clearcoat: .8, clearcoatRoughness: .12 })),
-  glassy: (color = '#d8eef4', op = .3) => cached(`gl${color}${op}`, () => new THREE.MeshPhysicalMaterial({ color, roughness: .05, metalness: 0, transmission: .9, thickness: .2, ior: 1.45, transparent: true, opacity: 1 - op * .2, envMapIntensity: 1.2 })),
+  glassy: (color = '#d8eef4', op = .3) => cached(`gl${color}${op}`, () => new THREE.MeshPhysicalMaterial({ color, roughness: .05, metalness: 0, transparent: true, opacity: .12 + op * .5, depthWrite: false, envMapIntensity: 1.2 })),
   crust: () => cached('crust', () => new THREE.MeshPhysicalMaterial({ color: '#5a2a12', roughness: 1, metalness: 0, normalMap: ccNormal('crack', 2), normalScale: v2(1.6) })),
 };

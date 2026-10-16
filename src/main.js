@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { R, initEngine, resize, render, setQuality, project } from './render/engine.js';
+import { R, initEngine, resize, render, setQuality, project, TIERS } from './render/engine.js';
 import { buildStudio } from './render/studio.js';
 import { initParticles, updateParticles, confetti, glints, clearParticles, P } from './fx/particles.js';
 import { initTools, setTool, T, makeTool } from './assets/tools.js';
@@ -9,6 +9,7 @@ import { bindUI, updateUI, toast, endGuide } from './ui/hud.js';
 import { sfx, setLoop, ac, AU } from './fx/audio.js';
 import { tickTweens, clock, cancelAll, later, $, store, vib } from './core/util.js';
 import { LEVELS, UPCOMING } from './levels/index.js';
+import THUMBS from './levels/thumbs.json'; /* pre-rendered shelf pictures (scripts/bake-thumbs.mjs): no level is built at boot */
 
 const SAVE_KEY = 'rw_save_v1';
 const save = store.json(SAVE_KEY, {});
@@ -18,7 +19,9 @@ if (!save._v3) { for (const k in save) if (save[k] && typeof save[k] === 'object
 if (!save._v2) { if (save.padlock && save.padlock.step > 0) save.padlock.step--; save._v2 = 1; store.setJson(SAVE_KEY, save); }
 const qs = new URLSearchParams(location.search);
 let tickKeys = () => { };
-let qCap = +(store.get('rw_q') ?? 3), dprCap = 2, lastTs = 0, slow = 0, frames = 0;
+/* default tier: phones/tablets and low-core machines start on medium, everything else on high; ultra only by choice */
+const weak = matchMedia('(pointer:coarse)').matches || (navigator.hardwareConcurrency || 4) <= 4 || (navigator.deviceMemory || 8) <= 4;
+let qCap = +(qs.get('q') ?? store.get('rw_q2') ?? (weak ? 1 : 2)), dprCap = 1, lastTs = 0, slow = 0, frames = 0, res = 1;
 
 function boot() {
   const cv = $('cv');
@@ -27,7 +30,7 @@ function boot() {
   if (qs.get('lowq')) qCap = 0;
   applyQuality(qCap);
   buildStudio(R.scene); initParticles(R.scene); initTools(R.scene);
-  addEventListener('resize', () => resize(dprCap)); addEventListener('orientationchange', () => setTimeout(() => resize(dprCap), 200));
+  addEventListener('resize', () => resize(dprCap * res)); addEventListener('orientationchange', () => setTimeout(() => resize(dprCap * res), 200));
   G.autoTurn = store.get('rw_auto') !== '0'; AU.on = store.get('rw_snd') !== '0';
   $('mAuto').textContent = 'Auto turn: ' + (G.autoTurn ? 'on' : 'off'); $('mSnd').textContent = 'Sound: ' + (AU.on ? 'on' : 'off');
   tickKeys = bindControls(cv);
@@ -39,23 +42,23 @@ function boot() {
   $('btnShop').onclick = () => { sfx('click'); toShop(); };
   $('btnLook').onclick = () => { $('done').classList.remove('on'); toast('Drag to spin · two fingers to move · pinch to zoom', 2600); };
   document.addEventListener('visibilitychange', () => { if (document.hidden && G.mode === 'play') openMenu(); });
-  window.__g = { P, gallery, auto, G, RIG, CAM, T, R, LEVELS, openLevel, startLevel, ff, skipStep, finishStep, enterStep, st, save, setQuality: applyQuality, toShop, clock, setView };
-  resize(dprCap);
+  window.__g = { P, gallery, auto, G, RIG, CAM, T, R, LEVELS, openLevel, startLevel, ff, skipStep, finishStep, enterStep, st, save, setQuality: applyQuality, toShop, clock, setView, thumbs: () => Object.fromEntries(LEVELS.map(d => [d.id, d.thumb])) };
+  resize(dprCap * res);
   requestAnimationFrame(frame);
   makeThumbs().then(() => { $('load').classList.remove('on'); buildShop(); G.mode = 'shop'; if (qs.get('level')) openLevel(qs.get('level')); });
 }
 
 /* ---------- quality ---------- */
-function applyQuality(q) { qCap = q; R.q = q; dprCap = [1, 1.25, 1.6, 2][q]; setQuality(q); resize(dprCap); $('mQ').textContent = 'Effects: ' + ['low', 'medium', 'high', 'ultra'][q]; }
-function cycleQuality() { const q = (qCap + 3) % 4; store.set('rw_q', q); applyQuality(q); }
+function applyQuality(q) { qCap = q; R.q = q; dprCap = TIERS[q].dpr; res = 1; setQuality(q); resize(dprCap * res); $('mQ').textContent = 'Effects: ' + ['low', 'medium', 'high', 'ultra'][q]; }
+function cycleQuality() { const q = (qCap + 3) % 4; store.set('rw_q2', q); applyQuality(q); }
 
 /* ---------- workshop ---------- */
 async function makeThumbs() {
   const all = LEVELS; let i = 0;
   for (const def of all) {
     $('loadTxt').textContent = 'Laying out ' + def.name + '…'; $('loadBar').style.width = (i / all.length * 100) + '%';
-    if (!store.get('rw_td4_' + def.id)) await new Promise(r => setTimeout(r, 16));
-    const tk = 'rw_td4_' + def.id; def.thumb = store.get(tk);
+    const tk = 'rw_td4_' + def.id; def.thumb = (!qs.get('bake') && THUMBS[def.id]) || store.get(tk);
+    if (!def.thumb) await new Promise(r => setTimeout(r, 16));
     try { if (!def.thumb) { def.thumb = snapshot(def); store.set(tk, def.thumb); } } catch (e) { console.error('thumb ' + def.id, e); }
     i++;
   }
@@ -70,7 +73,7 @@ function snapshot(def, keep) {
   if (!keep) { RIG.q.setFromEuler(new THREE.Euler(.32, -.5, 0, 'YXZ')); } setView({ preset: 'full', k: .95 }, true);
   G.time += .016; updateGame(0); updateParticles(0, R.camera, S); render();
   const url = R.renderer.domElement.toDataURL('image/jpeg', .82);
-  CAM.off = old; R.q = q; resize(dprCap); R.camera.aspect = innerWidth / innerHeight; R.camera.updateProjectionMatrix();
+  CAM.off = old; R.q = q; resize(dprCap * res); R.camera.aspect = innerWidth / innerHeight; R.camera.updateProjectionMatrix();
   return url;
 }
 function buildShop() {
@@ -144,10 +147,23 @@ function auto() {
   return out;
 }
 /* ---------- loop ---------- */
+let shopSkip = 0;
 function frame(ts) {
   requestAnimationFrame(frame);
-  let dt = Math.min(G.dtCap || .05, (ts - lastTs) / 1000 || .016); lastTs = ts; if (G.paused) dt = 0;
-  if (dt > 0 && !qs.get('lowq') && !qs.get('noadapt')) { frames++; slow = slow * .97 + (dt > .034 ? 1 : 0) * .03; if (frames > 90 && slow > .55 && qCap > 0) { applyQuality(qCap - 1); slow = 0; frames = 0; } }
+  const raw = (ts - lastTs) / 1000 || .016;
+  let dt = Math.min(G.dtCap || .05, raw); lastTs = ts; if (G.paused) dt = 0;
+  /* adaptive quality: after a short warm-up, if most recent frames miss ~36 fps drop a tier;
+     below the lowest tier shrink the render resolution instead. Long hitches (level loads) are ignored. */
+  if (dt > 0 && raw < .25 && !qs.get('lowq') && !qs.get('noadapt')) {
+    frames++; slow = slow * .94 + (raw > .028 ? .06 : 0);
+    if (frames > 45 && slow > .6) {
+      slow = 0; frames = 0;
+      if (qCap > 0) applyQuality(qCap - 1);
+      else if (res > .55) { res = Math.max(.55, res - .15); resize(dprCap * res); }
+    }
+  }
+  /* the workshop shelf only needs a slow spin behind the menu: draw it at ~20 fps */
+  if (G.mode === 'shop' && $('shop').classList.contains('on') && (shopSkip++ % 3)) { tickTweens(dt); return; }
   G.time += dt; tickTweens(dt); tickKeys(dt);
   updateGame(dt);
   const s = st();

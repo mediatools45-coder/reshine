@@ -39,7 +39,7 @@ float sNoise(vec3 p){ vec3 i=floor(p), f=fract(p); vec3 u=f*f*f*(f*(f*6.-15.)+10
               mix(mix(dot(sG3(i+vec3(0,0,1)),f-vec3(0,0,1)),dot(sG3(i+vec3(1,0,1)),f-vec3(1,0,1)),u.x),mix(dot(sG3(i+vec3(0,1,1)),f-vec3(0,1,1)),dot(sG3(i+vec3(1,1,1)),f-vec3(1,1,1)),u.x),u.y),u.z);
   return clamp(.5+.9*n,0.,1.); }
 const mat3 sRot=mat3(.8,.36,-.48,-.6,.48,-.64,0.,.8,.6);
-float sFbm(vec3 p){ float s=0., a=.5; for(int i=0;i<3;i++){ s+=a*sNoise(p); p=sRot*p*2.03+1.7; a*=.5; } return s/.875; }
+float sFbm(vec3 p){ float s=0., a=.5; for(int i=0;i<2;i++){ s+=a*sNoise(p); p=sRot*p*2.03+1.7; a*=.5; } return s/.75; }
 vec2 sCell(float c, vec2 uv){ float col=mod(c,3.), row=floor(c/3.+.01); return vec2((col*uAtlas.z+uPad+uv.x*(uAtlas.z-2.*uPad))/uAtlas.x,(row*uAtlas.w+uPad+uv.y*(uAtlas.w-2.*uPad))/uAtlas.y); }
 float sMk(float m,float n){ return smoothstep(.22,.62,m*(.62+.76*n)); }
 `;
@@ -58,7 +58,7 @@ vec2 dL=vec2(dFdx(nL),dFdy(nL)), dM=vec2(dFdx(nM),dFdy(nM)), dHh=vec2(dFdx(nH),d
 if(uKind<.5){
   sCol*= .8+.4*nL;
   float scrN=smoothstep(.74,.96,sNoise(sP*vec3(9.,.7,9.)+nL)), scrW=(1.-sB.g)*uScratch, scr=scrN*scrW; sCol*=1.-.35*scr; sR=mix(sR,.7,scr); sGr-=vec2(dFdx(scrN),dFdy(scrN))*scrW*.25;
-  float pitN=smoothstep(.78,.93,sFbm(sP*4.6+9.1)), pit=pitN*scrW; sCol*=1.-.45*pit; sNk=max(sNk,(.12+.5*pit)*scrW); sGr-=vec2(dFdx(pitN),dFdy(pitN))*scrW*.6;
+  float pitN=smoothstep(.78,.93,sNoise(sP*4.6+9.1)), pit=pitN*scrW; sCol*=1.-.45*pit; sNk=max(sNk,(.12+.5*pit)*scrW); sGr-=vec2(dFdx(pitN),dFdy(pitN))*scrW*.6;
   float sd=smoothstep(.02,.8,sB.g); sCol=mix(sCol,uSandC*(.9+.14*nH+.06*sNoise(sP*vec3(14.,1.,14.))),sd); sR=mix(sR,uSandR,sd); sM=mix(sM,1.,sd*.8);
   float pol=smoothstep(.0,.85,sB.b*(1.+(nH-.5)*.35)); sCol=mix(sCol,uPolC,pol); sR=mix(sR,uPolR,pol); sM=mix(sM,1.,pol);
 } else if(uKind<1.5){
@@ -80,13 +80,13 @@ if(uKind<.5||uKind>1.5){
 }
 float sRes=max(sMk(sB.r,nM),uResG*smoothstep(.1,.9,max(sA.r,sA.g)+.35)*(.75+.25*nM)); sCol=mix(sCol,vec3(.018,.017,.016)*(.7+.6*nH),sRes); sR=mix(sR,.88,sRes); sM=mix(sM,.15,sRes);
 float sDt=sMk(sB.r*0.+sA.b,nL)*uDirtRO.y; vec3 dC=uDirtC*(.8+.35*nM); sCol=mix(sCol,dC,sDt); sR=mix(sR,uDirtRO.x,sDt); sM=mix(sM,sM*.25,sDt); 
-float sCr=sMk(sA.g,nM); vec3 crC=uCrustC*(.55+.7*nH)*(.75+.35*nL)*(.85+.3*smoothstep(.4,.8,sFbm(sP*4.+2.))); sCol=mix(sCol,crC,sCr); sR=mix(sR,1.,sCr); sM=mix(sM,0.,sCr); sGr+=sCr*(dM*.6+dHh*.2); sNkC=sCr;
+float sCr=sMk(sA.g,nM); vec3 crC=uCrustC*(.55+.7*nH)*(.75+.35*nL)*(.85+.3*smoothstep(.4,.8,sNoise(sP*4.+2.))); sCol=mix(sCol,crC,sCr); sR=mix(sR,1.,sCr); sM=mix(sM,0.,sCr); sGr+=sCr*(dM*.6+dHh*.2); sNkC=sCr;
 /* rust: thin oxide film tints the metal first, then layered dark-brown / red-brown scale with sparse orange */
 float rA=sA.r*(.55+.9*nM);
 float thin=smoothstep(.04,.42,rA), heavy=smoothstep(.3,.82,rA);
 vec3 film=mix(sCol*vec3(.5,.34,.24),uRust1*1.6,.45)*(.8+.35*nL);
 vec3 r1=uRust1*(.55+.5*nH), r2=uRust2*.42, r3=uRust2*vec3(1.,.8,.6)*.78;
-float v1=sFbm(sP*3.1+5.), acc=smoothstep(.6,.86,sFbm(sP*1.7+13.))*(1.-.6*smoothstep(.5,.9,nH));
+float v1=sNoise(sP*3.1+5.)*.7+nM*.3, acc=smoothstep(.6,.86,sNoise(sP*1.7+13.))*(1.-.6*smoothstep(.5,.9,nH));
 vec3 ruC=mix(r1,r2,smoothstep(.28,.72,v1)); ruC=mix(ruC,r3,acc*.65); ruC*=.74+.52*nH; ruC=mix(ruC,vec3(dot(ruC,vec3(.3,.59,.11))),.12);
 sCol=mix(sCol,film,thin*(1.-heavy)); sR=mix(sR,.8,thin); sM=mix(sM,sM*.15,thin);
 sCol=mix(sCol,ruC,heavy); sR=mix(sR,.93+.07*nH,heavy); sM=mix(sM,0.,heavy); sGr+=heavy*(dM*.5+dHh*.15);

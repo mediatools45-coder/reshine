@@ -120,23 +120,32 @@ export const st = () => G.steps[G.step];
 export function loadLevel(def, opt = {}) {
   if (G.item) { G.item.dispose(); G.item = null; } if (G.before) { G.before.dispose(); G.before = null; }
   cancelAll(); clearParticles(); setTool(null); setLoop(null);
-  const it = new Item(def), bf = new Item(def, true);
-  try { def.build(it, it.r); it.finalize(); if (def.after) def.after(it); if (!opt.noBefore) { def.build(bf, bf.r); bf.finalize(); if (def.after) def.after(bf); } }
-  catch (e) { try { it.dispose(); bf.dispose(); } catch (_) { } G.level = null; throw e; }
-  R.scene.add(it.root); bf.root.visible = false; R.scene.add(bf.root);
-  for (const s of it.surfs.concat(bf.surfs)) { s.finishFades(); s.update(0); }
-  G.item = it; G.before = bf; G.level = def; G.step = -1; G.finishing = false; G.busy = false; G.flags = {};
+  const it = new Item(def);
+  try { def.build(it, it.r); it.finalize(); if (def.after) def.after(it); }
+  catch (e) { try { it.dispose(); } catch (_) { } G.level = null; throw e; }
+  R.scene.add(it.root);
+  for (const s of it.surfs) { s.finishFades(); s.update(0); }
+  /* the untouched "before" copy is only needed by the final comparison: built on demand (ensureBefore) */
+  G.item = it; G.before = null; G.level = def; G.step = -1; G.finishing = false; G.busy = false; G.flags = {};
   RIG.flip = 0; RIG.off.set(0, 0, 0); RIG.lift = 0; RIG.pose = def.pose || [-.35, .25]; RIG.q.copy(homeQuat()); RIG.extraQ.identity(); RIG.home = true;
   /* def.keep: the steps players do; any other step is folded into the next kept one and applied instantly */
   const raw = def.steps(it); let pre = []; G.steps = [];
   for (const s of raw) { if (def.keep && !def.keep.includes(s.id) && s.id !== 'compare') pre.push(s); else { s.pre = pre; pre = []; G.steps.push(s); } }
   G.steps.forEach((s, i) => { s.i = i; s.prog = 0; });
-  it.root.scale.setScalar(def.scale || 1); bf.root.scale.setScalar(def.scale || 1);
+  it.root.scale.setScalar(def.scale || 1);
   setView({ preset: 'show' }, true);
   return it;
 }
+export function ensureBefore() {
+  const def = G.level; if (G.before || !def || !G.item) return G.before;
+  const bf = new Item(def, true);
+  try { def.build(bf, bf.r); bf.finalize(); if (def.after) def.after(bf); } catch (e) { try { bf.dispose(); } catch (_) { } console.error(e); return null; }
+  bf.root.visible = false; bf.root.scale.setScalar(def.scale || 1); R.scene.add(bf.root);
+  for (const s of bf.surfs) { s.finishFades(); s.update(0); }
+  G.before = bf; return bf;
+}
 export function enterStep(i) {
-  const s = G.steps[i]; G.step = i; G.finishing = false; G.chips = []; G.hold = false; G.busy = false; G.down = false; T.spinning = false; s.prog = 0; s.needsHold = false;
+  const s = G.steps[i]; if (s.compare) ensureBefore(); G.step = i; G.finishing = false; G.chips = []; G.hold = false; G.busy = false; G.down = false; T.spinning = false; s.prog = 0; s.needsHold = false;
   G.item.hideGhosts(); G.fitExtra = [];
   RIG.pose = s.pose || G.level.pose || [-.35, .25]; RIG.home = true; RIG.spin = 0; if (!s.keepTurn) faceFront(); RIG.extraQ.identity();
   setTool(s.tool, s.toolScale || G.level.toolScale || 1);

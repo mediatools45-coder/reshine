@@ -81,10 +81,12 @@ export function updateParticles(dt, camera, H) {
     put(i, p.x, p.y, p.z, p.lc, a, s, p.type);
     if (p.trail && !p.rest) for (let j = 1; j <= p.trail; j++) { const f = j * .016; put(i, p.x - p.vx * f, p.y - p.vy * f, p.z - p.vz * f, p.lc, a * (1 - j / (p.trail + 1)), s * (1 - j * .18), p.type); }
   }
-  P.solids.forEach((im, j) => { im.count = sc[j]; im.instanceMatrix.needsUpdate = true; im.instanceColor.needsUpdate = true; });
+  /* upload only the live part of each buffer, and nothing at all when a batch stays empty */
+  const up = (at, n, w) => { at.clearUpdateRanges(); at.addUpdateRange(0, n * w); at.needsUpdate = true; };
+  P.solids.forEach((im, j) => { const n = sc[j]; if (!n && !im.count) return; im.count = n; if (n) { up(im.instanceMatrix, n, 16); up(im.instanceColor, n, 3); } });
   P.batches.forEach((b, i) => {
-    const g = b.geometry; g.setDrawRange(0, counts[i]);
-    g.attributes.position.needsUpdate = g.attributes.aCol.needsUpdate = g.attributes.aSzT.needsUpdate = true;
+    const g = b.geometry, n = counts[i];
+    if (n || g.drawRange.count) { g.setDrawRange(0, n); if (n) { up(g.attributes.position, n, 3); up(g.attributes.aCol, n, 4); up(g.attributes.aSzT, n, 2); } }
     b.material.uniforms.uPx.value = H / (2 * Math.tan(camera.fov * Math.PI / 360));
   });
 }

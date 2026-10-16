@@ -24,11 +24,14 @@ class Backdrop {
     this.a = new THREE.WebGLRenderTarget(4, 4, o); this.b = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, depthBuffer: false });
     this.blur = new FullScreenQuad(new THREE.ShaderMaterial({ uniforms: { tMap: { value: null }, uDir: { value: new THREE.Vector2() } }, vertexShader: VS, fragmentShader: BLUR_FS, depthTest: false, depthWrite: false }));
     this.copy = new FullScreenQuad(new THREE.ShaderMaterial({ uniforms: { tMap: { value: null } }, vertexShader: VS, fragmentShader: 'uniform sampler2D tMap; varying vec2 vUv; void main(){ gl_FragColor=vec4(texture2D(tMap,vUv).rgb,1.); }', depthTest: false, depthWrite: false }));
-    this.scale = .5;
+    this.scale = .5; this.n = 0; this.tex = null;
   }
   render(renderer, W, H) {
+    const t = R.tier || { bg: .4, bgEvery: 1 }; this.scale = t.bg;
     const w = Math.max(2, Math.round(W * this.scale)), h = Math.max(2, Math.round(H * this.scale));
-    if (this.a.width !== w || this.a.height !== h) { this.a.setSize(w, h); this.b.setSize(w, h); }
+    if (this.a.width !== w || this.a.height !== h) { this.a.setSize(w, h); this.b.setSize(w, h); this.tex = null; }
+    /* the blurred backdrop changes slowly: reuse it for a few frames */
+    if (this.tex && (this.n++ % t.bgEvery) !== 0) return this.tex;
     const cam = R.camera, L = cam.layers.mask; cam.layers.set(BG);
     R.fgFade && (R.fgFade.value = 0);
     renderer.setRenderTarget(this.a); renderer.setClearColor(0x0c0a08, 1); renderer.clear(true, true, false); renderer.render(R.scene, cam);
@@ -39,7 +42,7 @@ class Backdrop {
       u.tMap.value = this.a.texture; u.uDir.value.set(r / w, 0); renderer.setRenderTarget(this.b); this.blur.render(renderer);
       u.tMap.value = this.b.texture; u.uDir.value.set(0, r / h); renderer.setRenderTarget(this.a); this.blur.render(renderer);
     }
-    return this.a.texture;
+    this.tex = this.a.texture; return this.tex;
   }
 }
 /* main scene pass: blurred backdrop + sharp foreground; split before/after render for the comparison slider */
@@ -112,7 +115,7 @@ class DofPass extends Pass {
 
 
 export function initPost(renderer) {
-  const rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: 4 }); rt.depthTexture = new THREE.DepthTexture(4, 4); rt.depthTexture.type = THREE.UnsignedIntType;
+  const rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: 2 }); rt.depthTexture = new THREE.DepthTexture(4, 4); rt.depthTexture.type = THREE.UnsignedIntType;
   const composer = new EffectComposer(renderer, rt); R.composer = composer;
   composer.addPass(new ScenePass());
   /* ambient occlusion at half resolution: contact darkening in crevices, under parts and on the floor */

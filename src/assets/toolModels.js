@@ -180,7 +180,7 @@ export function buildTool(kind, PN) {
       /* trigger spray bottle */
       PN.rotation.x = Math.PI; PN.position.y = 1.85;
       add(lat([[0, 0], [.22, 0, 1], [.24, .03], [.24, .7], [.2, .85], [.1, .95], [.1, 1.0, 1]], 40), M.glassy('#cfe6f0', .3), [0, .2, 0]);
-      add(lat([[0, 0], [.21, 0], [.21, .55], [.17, .65], [0, .66]], 32), new THREE.MeshPhysicalMaterial({ color: '#3f93c9', roughness: .05, transmission: .6, thickness: .5, transparent: true, opacity: .85 }), [0, .23, 0]);
+      add(lat([[0, 0], [.21, 0], [.21, .55], [.17, .65], [0, .66]], 32), new THREE.MeshPhysicalMaterial({ color: '#3f93c9', roughness: .05, transparent: true, opacity: .6 }), [0, .23, 0]);
       add(cyl(.12, .12, .14, 28), M.plastic('#1d2328', .5), [0, 1.27, 0]);
       add(rbox(.16, .32, .5, .06), M.plastic('#e5c34a', .35), [0, 1.48, .12]); add(rbox(.1, .3, .08, .03), M.plastic('#e5c34a', .35), [0, 1.25, .3], [.2, 0, 0]);
       add(cyl(.03, .04, .12, 12), M.plastic('#1d2328', .5), [0, 1.62, .4], [Math.PI / 2, 0, 0]);

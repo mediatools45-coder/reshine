@@ -30,8 +30,8 @@ export function initLighting(renderer, scene) {
   /* small sky/ground fill so shadowed sides never go flat black */
   L.hemi = new THREE.HemisphereLight(0xd8d4c8, 0x3a2614, .3); scene.add(L.hemi);
   const key = new THREE.DirectionalLight(0xffe4c4, 2.1); key.castShadow = true;
-  key.shadow.mapSize.set(2048, 2048); const sc = key.shadow.camera; sc.left = -8; sc.right = 8; sc.top = 8; sc.bottom = -8; sc.near = 1; sc.far = 40;
-  key.shadow.bias = -.0002; key.shadow.normalBias = .03; key.shadow.radius = 9; key.shadow.blurSamples = 16;
+  key.shadow.mapSize.set(1024, 1024); const sc = key.shadow.camera; sc.left = -8; sc.right = 8; sc.top = 8; sc.bottom = -8; sc.near = 1; sc.far = 40;
+  key.shadow.bias = -.0004; key.shadow.normalBias = .03;
   scene.add(key, key.target); L.key = key;
   L.rim = new THREE.DirectionalLight(0xbfd4ff, 1.3); L.rim.position.set(6, 5, -9); scene.add(L.rim);
   L.kick = new THREE.DirectionalLight(0xffc896, .5); L.kick.position.set(9, 1.5, 5); scene.add(L.kick);
