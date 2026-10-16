@@ -67,7 +67,7 @@ Put the levers, shackle and plate back.
 
 ### Step 8: Peen the Rivets
 
-Peen the rivets shut, timing each strike.
+Tap each rivet to peen it shut.
 
 ![Peen the Rivets](img/padlock/08-rivets.jpg)
 ![tool](img/tools/hammer.jpg)
@@ -147,7 +147,7 @@ Punch out the pins so the knife comes apart.
 
 ### Step 7: Sharpen the Blade
 
-Sharpen the blade at a steady angle.
+Long, slow strokes hone the edge.
 
 ![Sharpen the Blade](img/knife/07-sharpen.jpg)
 ![tool](img/tools/stone.jpg)
@@ -271,7 +271,7 @@ Slide the grip back onto the tang.
 
 ### Step 10: Hammer the Rivets Home
 
-Hammer in new brass rivets, timing each strike.
+Tap each brass rivet to hammer it flush.
 
 ![Hammer the Rivets Home](img/sword/10-secure.jpg)
 ![tool](img/tools/hammer.jpg)
@@ -721,7 +721,7 @@ Polish the rusty pickup poles to chrome.
 
 ### Step 8: Press In New Frets
 
-Press in new frets, timing each press.
+Tap each slot to press in a new fret.
 
 ![Press In New Frets](img/guitar/08-frets.jpg)
 ![tool](img/tools/press.jpg)
@@ -730,7 +730,7 @@ Press in new frets, timing each press.
 
 ### Step 9: String Up & Tune
 
-String it up and tune each peg.
+Circle each peg; the string glides into tune.
 
 ![String Up & Tune](img/guitar/09-tune.jpg)
 
