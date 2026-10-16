@@ -187,7 +187,7 @@ function frame(ts) {
   G.time += dt; tickTweens(dt); tickKeys(dt);
   updateGame(dt);
   const s = st();
-  if (G.mode === 'play' && s && s.compare && G.before) { R.cmp = { x: G.cmp, before: b => { G.before.root.visible = b; G.item.root.visible = !b; } }; }
+  if (G.mode === 'play' && s && s.compare && G.before) { R.cmp = { x: G.cmp, before: b => { if (!G.before || !G.item) return; G.before.root.visible = b; G.item.root.visible = !b; } }; }
   else { R.cmp = null; if (G.item) G.item.root.visible = true; if (G.before) G.before.root.visible = false; }
   updateParticles(dt, R.camera, R.H * R.dpr);
   render();
