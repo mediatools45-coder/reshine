@@ -6,7 +6,7 @@ const OUT = 'docs/guide/img';
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 640, height: 640 } });
 const errs = []; page.on('pageerror', e => errs.push(e.message));
-await page.goto('file://' + process.cwd() + '/dist/index.html?noadapt=1&q=2');
+await page.goto('file://' + process.cwd() + '/dist/index.html?noadapt=1&q=2', { timeout: 600000 });
 await page.waitForFunction(() => window.__g && !document.getElementById('load').classList.contains('on'), null, { timeout: 900000 });
 await page.addStyleTag({ content: 'body > *:not(#cv){display:none!important}' });
 const W = (f, a) => page.evaluate(f, a), sleep = ms => page.waitForTimeout(ms);
