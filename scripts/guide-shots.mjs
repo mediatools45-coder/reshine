@@ -11,11 +11,11 @@ await page.waitForFunction(() => window.__g && !document.getElementById('load').
 await page.addStyleTag({ content: 'body > *:not(#cv){display:none!important}' });
 const W = (f, a) => page.evaluate(f, a), sleep = ms => page.waitForTimeout(ms);
 const cv = await page.$('#cv');
-const only = process.argv[2];
+const only = process.argv[2], LIST = only ? only.split(',') : null, TOOLS_ONLY = process.env.TOOLS ? process.env.TOOLS.split(',') : null;
 const ids = await W(() => window.__g.LEVELS.map(d => d.id));
 const out = {}; const kinds = new Set();
 for (const id of ids) {
-  if (only && only !== id) continue;
+  if (TOOLS_ONLY || (LIST && !LIST.includes(id))) continue;
   mkdirSync(`${OUT}/${id}`, { recursive: true });
   const meta = await W(id => { const g = window.__g; g.G.dtCap = .5; g.openLevel(id); g.startLevel(g.G.level, 0); const d = g.G.level;
     return { name: d.name, steps: g.G.steps.map(s => ({ id: s.id, name: s.name, tool: s.tool || null, toolLabel: s.toolLabel || null, input: s.input || null, hint: s.hint || null, done: s.done || null })) }; }, id);
@@ -29,7 +29,7 @@ for (const id of ids) {
 }
 /* tools: one at a time on the clean studio set */
 mkdirSync(`${OUT}/tools`, { recursive: true });
-for (const k of kinds) {
+for (const k of TOOLS_ONLY || (process.env.NOTOOLS ? [] : kinds)) {
   if (['hand', 'none', 'crown', 'magnify'].includes(k)) continue;
   const ok = await W(k => { const g = window.__g, T3 = g.THREE; g.toShop(); document.getElementById('shop').classList.remove('on');
     if (g.G.item) g.G.item.root.removeFromParent(); if (g.G.before) g.G.before.root.removeFromParent();
@@ -43,6 +43,6 @@ for (const k of kinds) {
   await sleep(1200);
   await cv.screenshot({ path: `${OUT}/tools/${k}.jpg`, type: 'jpeg', quality: 85 });
 }
-writeFileSync('docs/guide/steps.json', JSON.stringify({ levels: out, tools: [...kinds] }, null, 1));
+if (!LIST && !TOOLS_ONLY) writeFileSync('docs/guide/steps.json', JSON.stringify({ levels: out, tools: [...kinds] }, null, 1));
 console.log('tools', [...kinds].join(' '), 'errors', errs.length, errs.slice(0, 3).join(' | '));
 await browser.close();
